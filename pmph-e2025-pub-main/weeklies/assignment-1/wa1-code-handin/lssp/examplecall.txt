@@ -1,0 +1,1 @@
+futhark bench lssp-same.fut
