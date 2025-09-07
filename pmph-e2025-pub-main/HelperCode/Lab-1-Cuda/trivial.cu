@@ -8,9 +8,12 @@
 
 #define GPU_RUNS 100
 
-__global__ void mul2Kernel(float* X, float *Y) {
-    const unsigned int gid = threadIdx.x;
-    Y[gid] = 2 * X[gid];
+__global__ void mul2Kernel(const float* X, float* Y, unsigned int N) {
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    int stride = blockDim.x * gridDim.x;
+    for (int i = idx; i < N; i += stride) {
+        Y[i] = 2 * X[i];
+    }
 }
 
 int main(int argc, char** argv) {
@@ -55,9 +58,11 @@ int main(int argc, char** argv) {
     // copy host memory to device
     cudaMemcpy(d_in, h_in, mem_size, cudaMemcpyHostToDevice);
 
+    unsigned int threadsPerBlock = 256;
+    int blocksPerGrid = (N + threadsPerBlock - 1) / threadsPerBlock;
     // a small number of dry runs
     for(int r = 0; r < 1; r++) {
-        mul2Kernel<<< 1, N>>>(d_in, d_out);
+        mul2Kernel<<<blocksPerGrid, threadsPerBlock>>>(d_in, d_out, N);
     }
   
     { // execute the kernel a number of times;
@@ -66,9 +71,13 @@ int main(int argc, char** argv) {
     
         double elapsed; struct timeval t_start, t_end, t_diff;
         gettimeofday(&t_start, NULL);
-
+        // Prefetch the x and y arrays to the GPU
+        /* cudaMemPrefetchAsync(d_in, N*sizeof(float), 0, 0);
+        cudaMemPrefetchAsync(d_out, N*sizeof(float), 0, 0);
+        int blockSize = 256
+        int numBlocks = (N + blockSize -1) /blockSize */
         for(int r = 0; r < GPU_RUNS; r++) {
-            mul2Kernel<<< 1, N>>>(d_in, d_out);
+            mul2Kernel<<<blocksPerGrid, threadsPerBlock>>>(d_in, d_out, N);
         }
         cudaDeviceSynchronize();
         // ^ `cudaDeviceSynchronize` is needed for runtime
