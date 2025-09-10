@@ -8,6 +8,7 @@
 -- }
 -- output { [3.0f32, 0.0f32, -4.0f32, 6.0f32, 9.0f32] }
 
+-- [0i64, 1i64, 0i64, 1i64, 2i64, 1i64, 2i64, 3i64, 2i64, 3i64, 3i64] [2.0f32, -1.0f32, -1.0f32, 2.0f32, -1.0f32, -1.0f32, 2.0f32, -1.0f32, -1.0f32, 2.0f32, 3.0f32] [2i64, 3i64, 3i64, 2i64, 1i64] [2.0f32, 1.0f32, 0.0f32, 3.0f32]
 ------------------------
 --- Sgm Scan Helpers ---
 ------------------------
@@ -100,17 +101,50 @@ let sgmSumF32 [n] (flags: [n]bool) (vals: [n]f32) : [n]f32 =
 ---    with a map that extracts the last element  ---
 ---    of the segment.
 -----------------------------------------------------
+--  let (inds, vals) = unzip mat
+--  let res = replicate num_rows 0.0f32
+--  let offset = 0i64
+  -- semantically this is a map over rows
+--  let (res, _) =
+--  loop (res, offset) for i < num_rows do
+--    let row_len = shp[i]
+--    let sum =
+--    loop sum = 0.0f32 for j < row_len do
+--        sum + vals[offset + j] * vct[inds[offset + j]]
+--    let res[i] = sum
+--    let offset = offset + row_len
+--    in (res, offset)
+--  in res
 let spMatVctMult [num_elms][vct_len][num_rows]
                  (mat_val: [num_elms](i64, f32))
                  (mat_shp: [num_rows]i64)
                  (vct: [vct_len]f32)
                    : [num_rows]f32 =
+  -- Scan inclusive
+  let shp_sc = scan (+) 0 mat_shp 
 
-  let shp_sc = scan (+) 0 mat_shp
+  -- Scan exclusive
+  let shape_exclusive = map (\i-> if i == 0 then 0 else shp_sc[i-1]) (iota num_rows)
+  -- numelements
+  let falsearray = replicate num_elms false
+  let truearray = replicate num_rows true
+  -- Flag array
+  let flag = scatter falsearray shape_exclusive truearray
+  -- Product
+  let prods = map(\(i,x) -> x * vct[i]) mat_val
+
+  let segmedtedvalues =  sgmSumF32 flag prods
+  
+  in map(\(i)-> segmedtedvalues[i] ) (map (\x -> x-1) shp_sc)
+  
   -- TODO: fill in your implementation here.
   --       for now, the function simply returns zeroes.
-   in replicate num_rows 0.0f32
-
+  -- Multiply with weight,
+  -- map reduce and then plus
+  --Irregular pattern
+  -- map with multiplication, create a big array, create a segmented flag, and select in 
+-- in replicate num_rows 0.0f32
+--in aoaflag 
 -- One may run with for example:
 -- $ futhark dataset --i64-bounds=0:9999 -g [1000000]i64 --f32-bounds=-7.0:7.0 -g [1000000]f32 --i64-bounds=100:100 -g [10000]i64 --f32-bounds=-10.0:10.0 -g [10000]f32 | ./spMVmult-seq -t /dev/stderr -n
 let main [n][m]
