@@ -1,8 +1,8 @@
 CXX        = nvcc -O3 
 #-arch=sm_60
 
-SRC = trivial.cu
-EXECUTABLE = trivial
+SRC = wa1-task3.cu
+EXECUTABLE = wa1-task3
 
 default: compile run
 
