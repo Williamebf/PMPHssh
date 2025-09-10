@@ -6,13 +6,13 @@
 
 #include "helper.h"
 
-#define GPU_RUNS 100
+#define GPU_RUNS 300
 
-__global__ void mul2Kernel(const float* X, float* Y, unsigned int N) {
+__global__ void addVec(float* X, float* Y, float* C, unsigned int N) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     int stride = blockDim.x * gridDim.x;
     for (int i = idx; i < N; i += stride) {
-        Y[i] = 2 * X[i];
+        C[i] = X[i] + Y[i];
     }
 }
 
@@ -20,12 +20,18 @@ int main(int argc, char** argv) {
     unsigned int N;
     
     { // reading the number of elements 
-      if (argc != 2) { 
+      /* if (argc != 2) { 
         printf("Num Args is: %d instead of 1. Exiting!\n", argc); 
         exit(1);
-      }
-
-      N = atoi(argv[1]);
+      } */
+    
+      //N = 753411; 1190 gb/sec
+      //N = 32768; 2^1562  62.66 gb/sec
+      //N = 524288; //2^19 878 gb/sec
+      //N = 524288*2; //2^20 1400 gb/sec
+      //N = 524288*2*2; //2^21 1706 gb/sec 
+      N = 524288*2*2*2; //2^22 816 gb/sec
+      //N = atoi(argv[1]);
       printf("N is: %d\n", N);
 
       const unsigned int maxN = 500000000;
@@ -37,32 +43,52 @@ int main(int argc, char** argv) {
 
     // use the first CUDA device:
     cudaSetDevice(0);
-
     unsigned int mem_size = N*sizeof(float);
-
-    // allocate host memory
-    float* h_in  = (float*) malloc(mem_size);
-    float* h_out = (float*) malloc(mem_size);
-
+    /* cudaMallocManaged(&x, N*sizeof(float));
+    cudaMallocManaged(&y, N*sizeof(float)); */
+    float* h_x = (float*)malloc(mem_size);
+    float* h_y = (float*)malloc(mem_size);
+    float* h_out1 = (float*)malloc(mem_size);
+    float* h_out2 = (float*)malloc(mem_size);
+    for (unsigned int i = 0; i < N; i++) {
+            h_x[i] = (float)52145.42;
+            h_y[i] = (float)125.4267;
+            h_out1[i] = (float)0.0;
+            h_out2[i] = (float)0.0;
+        }
     // initialize the memory
-    for(unsigned int i=0; i<N; ++i) {
+    /* for(unsigned int i=0; i<N; ++i) {
         h_in[i] = (float)i;
+    } */
+    //Sequenceial
+    double elapsed; struct timeval t_start, t_end, t_diff;
+        gettimeofday(&t_start, NULL);
+    for (int i = 0; i < N; i++) {
+        h_out2[i] = h_x[i] + h_y[i];
     }
-
+    gettimeofday(&t_end, NULL);
+    timeval_subtract(&t_diff, &t_end, &t_start);
+    elapsed = (1.0 * (t_diff.tv_sec*1e6+t_diff.tv_usec));
+    double gigabytespersecsequential = (2.0 * N * 4.0) / (elapsed * 1000.0);
+    printf("The sequential took %f microseconds. GB/sec: %f \n", elapsed, gigabytespersecsequential);
+        
     // allocate device memory
-    float* d_in;
+    float* d_x;
+    float* d_y;
     float* d_out;
-    cudaMalloc((void**)&d_in,  mem_size);
+    cudaMalloc((void**)&d_x,  mem_size);
+    cudaMalloc((void**)&d_y,  mem_size);
     cudaMalloc((void**)&d_out, mem_size);
 
     // copy host memory to device
-    cudaMemcpy(d_in, h_in, mem_size, cudaMemcpyHostToDevice);
+    cudaMemcpy(d_x, h_x, mem_size, cudaMemcpyHostToDevice);
+    cudaMemcpy(d_y, h_y, mem_size, cudaMemcpyHostToDevice);
 
     unsigned int threadsPerBlock = 256;
     int blocksPerGrid = (N + threadsPerBlock - 1) / threadsPerBlock;
     // a small number of dry runs
     for(int r = 0; r < 1; r++) {
-        mul2Kernel<<<blocksPerGrid, threadsPerBlock>>>(d_in, d_out, N);
+        addVec<<<blocksPerGrid, threadsPerBlock>>>(d_x, d_y, d_out, N);
     }
   
     { // execute the kernel a number of times;
@@ -77,7 +103,7 @@ int main(int argc, char** argv) {
         int blockSize = 256
         int numBlocks = (N + blockSize -1) /blockSize */
         for(int r = 0; r < GPU_RUNS; r++) {
-            mul2Kernel<<<blocksPerGrid, threadsPerBlock>>>(d_in, d_out, N);
+            addVec<<<blocksPerGrid, threadsPerBlock>>>(d_x, d_y, d_out, N);
         }
         cudaDeviceSynchronize();
         // ^ `cudaDeviceSynchronize` is needed for runtime
@@ -107,22 +133,31 @@ int main(int argc, char** argv) {
     gpuAssert( cudaPeekAtLastError() );
 
     // copy result from ddevice to host
-    cudaMemcpy(h_out, d_out, mem_size, cudaMemcpyDeviceToHost);
+    cudaMemcpy(h_out1, d_out, mem_size, cudaMemcpyDeviceToHost);
 
     // print result
     //for(unsigned int i=0; i<N; ++i) printf("%.6f\n", h_out[i]);
 
     for(unsigned int i=0; i<N; ++i) {
-        float actual   = h_out[i];
-        float expected = 2 * h_in[i]; 
-        if( actual != expected ) {
-            printf("Invalid result at index %d, actual: %f, expected: %f. \n", i, actual, expected);
+        //h_out2 is CPU, h_out1 is gpu
+        if (fabs(h_out2[i] - h_out1[i]) < 0.000001){ 
+            float actualgpu   = h_out1[i];
+            float actualcpu = h_out2[i]; 
+        if( actualgpu != actualcpu ) {
+            printf("Invalid result at index %d, actual: %f, expected: %f. \n", i, actualgpu, actualcpu);
             exit(3);
         }
     }
+    }
     printf("Successful Validation.\n");
-
+    
+    
     // clean-up memory
-    free(h_in);       free(h_out);
-    cudaFree(d_in);   cudaFree(d_out);
+    free(h_x);
+    free(h_y);
+    free(h_out1);
+    free(h_out2);
+    cudaFree(d_x);
+    cudaFree(d_y);
+    cudaFree(d_out);
 }

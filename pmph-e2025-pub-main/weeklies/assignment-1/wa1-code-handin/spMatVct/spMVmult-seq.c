@@ -50,21 +50,29 @@ const char *futhark_get_tuning_param_name(int);
 const char *futhark_get_tuning_param_class(int);
 
 // Arrays
-struct futhark_i32_1d;
-struct futhark_i32_1d *futhark_new_i32_1d(struct futhark_context *ctx, const int32_t *data, int64_t dim0);
-struct futhark_i32_1d *futhark_new_raw_i32_1d(struct futhark_context *ctx, unsigned char *data, int64_t dim0);
-int futhark_free_i32_1d(struct futhark_context *ctx, struct futhark_i32_1d *arr);
-int futhark_values_i32_1d(struct futhark_context *ctx, struct futhark_i32_1d *arr, int32_t *data);
-int futhark_index_i32_1d(struct futhark_context *ctx, int32_t *out, struct futhark_i32_1d *arr, int64_t i0);
-unsigned char *futhark_values_raw_i32_1d(struct futhark_context *ctx, struct futhark_i32_1d *arr);
-const int64_t *futhark_shape_i32_1d(struct futhark_context *ctx, struct futhark_i32_1d *arr);
+struct futhark_f32_1d;
+struct futhark_f32_1d *futhark_new_f32_1d(struct futhark_context *ctx, const float *data, int64_t dim0);
+struct futhark_f32_1d *futhark_new_raw_f32_1d(struct futhark_context *ctx, unsigned char *data, int64_t dim0);
+int futhark_free_f32_1d(struct futhark_context *ctx, struct futhark_f32_1d *arr);
+int futhark_values_f32_1d(struct futhark_context *ctx, struct futhark_f32_1d *arr, float *data);
+int futhark_index_f32_1d(struct futhark_context *ctx, float *out, struct futhark_f32_1d *arr, int64_t i0);
+unsigned char *futhark_values_raw_f32_1d(struct futhark_context *ctx, struct futhark_f32_1d *arr);
+const int64_t *futhark_shape_f32_1d(struct futhark_context *ctx, struct futhark_f32_1d *arr);
+struct futhark_i64_1d;
+struct futhark_i64_1d *futhark_new_i64_1d(struct futhark_context *ctx, const int64_t *data, int64_t dim0);
+struct futhark_i64_1d *futhark_new_raw_i64_1d(struct futhark_context *ctx, unsigned char *data, int64_t dim0);
+int futhark_free_i64_1d(struct futhark_context *ctx, struct futhark_i64_1d *arr);
+int futhark_values_i64_1d(struct futhark_context *ctx, struct futhark_i64_1d *arr, int64_t *data);
+int futhark_index_i64_1d(struct futhark_context *ctx, int64_t *out, struct futhark_i64_1d *arr, int64_t i0);
+unsigned char *futhark_values_raw_i64_1d(struct futhark_context *ctx, struct futhark_i64_1d *arr);
+const int64_t *futhark_shape_i64_1d(struct futhark_context *ctx, struct futhark_i64_1d *arr);
 
 // Opaque values
 
 
 
 // Entry points
-int futhark_entry_main(struct futhark_context *ctx, int32_t *out0, const struct futhark_i32_1d *in0);
+int futhark_entry_main(struct futhark_context *ctx, struct futhark_f32_1d **out0, const struct futhark_i64_1d *in0, const struct futhark_f32_1d *in1, const struct futhark_i64_1d *in2, const struct futhark_f32_1d *in3);
 
 // Miscellaneous
 int futhark_context_sync(struct futhark_context *ctx);
@@ -1062,7 +1070,7 @@ static int report_events_in_list(struct event_list *l,
 #include <getopt.h>
 #include <ctype.h>
 #include <inttypes.h>
-static const char *entry_point = "main";
+#include <unistd.h>
 // Start of values.h.
 
 //// Text I/O
@@ -1868,1000 +1876,12 @@ static int write_scalar(FILE *out, int write_binary, const struct primtype_info_
 
 // End of values.h.
 
-// Start of server.h.
-
-// Forward declarations of things that we technically don't know until
-// the application header file is included, but which we need.
-struct futhark_context_config;
-struct futhark_context;
-char *futhark_context_get_error(struct futhark_context *ctx);
-int futhark_context_sync(struct futhark_context *ctx);
-int futhark_context_clear_caches(struct futhark_context *ctx);
-int futhark_context_config_set_tuning_param(struct futhark_context_config *cfg,
-                                            const char *param_name,
-                                            size_t new_value);
-int futhark_get_tuning_param_count(void);
-const char* futhark_get_tuning_param_name(int i);
-const char* futhark_get_tuning_param_class(int i);
-
-typedef int (*restore_fn)(const void*, FILE *, struct futhark_context*, void*);
-typedef void (*store_fn)(const void*, FILE *, struct futhark_context*, void*);
-typedef int (*free_fn)(const void*, struct futhark_context*, void*);
-typedef int (*project_fn)(struct futhark_context*, void*, const void*);
-typedef int (*new_fn)(struct futhark_context*, void**, const void*[]);
-
-struct field {
-  const char *name;
-  const struct type *type;
-  project_fn project;
-};
-
-struct record {
-  int num_fields;
-  const struct field* fields;
-  new_fn new;
-};
-
-struct type {
-  const char *name;
-  restore_fn restore;
-  store_fn store;
-  free_fn free;
-  const void *aux;
-  const struct record *record;
-};
-
-int free_scalar(const void *aux, struct futhark_context *ctx, void *p) {
-  (void)aux;
-  (void)ctx;
-  (void)p;
-  // Nothing to do.
-  return 0;
-}
-
-#define DEF_SCALAR_TYPE(T)                                      \
-  int restore_##T(const void *aux, FILE *f,                     \
-                  struct futhark_context *ctx, void *p) {       \
-    (void)aux;                                                  \
-    (void)ctx;                                                  \
-    return read_scalar(f, &T##_info, p);                        \
-  }                                                             \
-                                                                \
-  void store_##T(const void *aux, FILE *f,                      \
-                 struct futhark_context *ctx, void *p) {        \
-    (void)aux;                                                  \
-    (void)ctx;                                                  \
-    write_scalar(f, 1, &T##_info, p);                           \
-  }                                                             \
-                                                                \
-  struct type type_##T =                                        \
-    { .name = #T,                                               \
-      .restore = restore_##T,                                   \
-      .store = store_##T,                                       \
-      .free = free_scalar                                       \
-    }                                                           \
-
-DEF_SCALAR_TYPE(i8);
-DEF_SCALAR_TYPE(i16);
-DEF_SCALAR_TYPE(i32);
-DEF_SCALAR_TYPE(i64);
-DEF_SCALAR_TYPE(u8);
-DEF_SCALAR_TYPE(u16);
-DEF_SCALAR_TYPE(u32);
-DEF_SCALAR_TYPE(u64);
-DEF_SCALAR_TYPE(f16);
-DEF_SCALAR_TYPE(f32);
-DEF_SCALAR_TYPE(f64);
-DEF_SCALAR_TYPE(bool);
-
-struct value {
-  const struct type *type;
-  union {
-    void *v_ptr;
-    int8_t  v_i8;
-    int16_t v_i16;
-    int32_t v_i32;
-    int64_t v_i64;
-
-    uint8_t  v_u8;
-    uint16_t v_u16;
-    uint32_t v_u32;
-    uint64_t v_u64;
-
-    uint16_t v_f16;
-    float v_f32;
-    double v_f64;
-
-    bool v_bool;
-  } value;
-};
-
-void* value_ptr(struct value *v) {
-  if (v->type == &type_i8) {
-    return &v->value.v_i8;
-  }
-  if (v->type == &type_i16) {
-    return &v->value.v_i16;
-  }
-  if (v->type == &type_i32) {
-    return &v->value.v_i32;
-  }
-  if (v->type == &type_i64) {
-    return &v->value.v_i64;
-  }
-  if (v->type == &type_u8) {
-    return &v->value.v_u8;
-  }
-  if (v->type == &type_u16) {
-    return &v->value.v_u16;
-  }
-  if (v->type == &type_u32) {
-    return &v->value.v_u32;
-  }
-  if (v->type == &type_u64) {
-    return &v->value.v_u64;
-  }
-  if (v->type == &type_f16) {
-    return &v->value.v_f16;
-  }
-  if (v->type == &type_f32) {
-    return &v->value.v_f32;
-  }
-  if (v->type == &type_f64) {
-    return &v->value.v_f64;
-  }
-  if (v->type == &type_bool) {
-    return &v->value.v_bool;
-  }
-  return &v->value.v_ptr;
-}
-
-struct variable {
-  // NULL name indicates free slot.  Name is owned by this struct.
-  char *name;
-  struct value value;
-};
-
-typedef int (*entry_point_fn)(struct futhark_context*, void**, void**);
-
-struct entry_point {
-  const char *name;
-  entry_point_fn f;
-  const char** tuning_params;
-  const struct type **out_types;
-  bool *out_unique;
-  const struct type **in_types;
-  bool *in_unique;
-};
-
-int entry_num_ins(struct entry_point *e) {
-  int count = 0;
-  while (e->in_types[count]) {
-    count++;
-  }
-  return count;
-}
-
-int entry_num_outs(struct entry_point *e) {
-  int count = 0;
-  while (e->out_types[count]) {
-    count++;
-  }
-  return count;
-}
-
-struct futhark_prog {
-  // Last entry point identified by NULL name.
-  struct entry_point *entry_points;
-  // Last type identified by NULL name.
-  const struct type **types;
-};
-
-struct server_state {
-  struct futhark_prog prog;
-  struct futhark_context_config *cfg;
-  struct futhark_context *ctx;
-  int variables_capacity;
-  struct variable *variables;
-};
-
-struct variable* get_variable(struct server_state *s,
-                              const char *name) {
-  for (int i = 0; i < s->variables_capacity; i++) {
-    if (s->variables[i].name != NULL &&
-        strcmp(s->variables[i].name, name) == 0) {
-      return &s->variables[i];
-    }
-  }
-
-  return NULL;
-}
-
-struct variable* create_variable(struct server_state *s,
-                                 const char *name,
-                                 const struct type *type) {
-  int found = -1;
-  for (int i = 0; i < s->variables_capacity; i++) {
-    if (found == -1 && s->variables[i].name == NULL) {
-      found = i;
-    } else if (s->variables[i].name != NULL &&
-               strcmp(s->variables[i].name, name) == 0) {
-      return NULL;
-    }
-  }
-
-  if (found != -1) {
-    // Found a free spot.
-    s->variables[found].name = strdup(name);
-    s->variables[found].value.type = type;
-    return &s->variables[found];
-  }
-
-  // Need to grow the buffer.
-  found = s->variables_capacity;
-  s->variables_capacity *= 2;
-  s->variables = realloc(s->variables,
-                         s->variables_capacity * sizeof(struct variable));
-
-  s->variables[found].name = strdup(name);
-  s->variables[found].value.type = type;
-
-  for (int i = found+1; i < s->variables_capacity; i++) {
-    s->variables[i].name = NULL;
-  }
-
-  return &s->variables[found];
-}
-
-void drop_variable(struct variable *v) {
-  free(v->name);
-  v->name = NULL;
-}
-
-int arg_exists(const char *args[], int i) {
-  return args[i] != NULL;
-}
-
-const char* get_arg(const char *args[], int i) {
-  if (!arg_exists(args, i)) {
-    futhark_panic(1, "Insufficient command args.\n");
-  }
-  return args[i];
-}
-
-const struct type* get_type(struct server_state *s, const char *name) {
-  for (int i = 0; s->prog.types[i]; i++) {
-    if (strcmp(s->prog.types[i]->name, name) == 0) {
-      return s->prog.types[i];
-    }
-  }
-
-  futhark_panic(1, "Unknown type %s\n", name);
-  return NULL;
-}
-
-struct entry_point* get_entry_point(struct server_state *s, const char *name) {
-  for (int i = 0; s->prog.entry_points[i].name; i++) {
-    if (strcmp(s->prog.entry_points[i].name, name) == 0) {
-      return &s->prog.entry_points[i];
-    }
-  }
-
-  return NULL;
-}
-
-// Print the command-done marker, indicating that we are ready for
-// more input.
-void ok(void) {
-  printf("%%%%%% OK\n");
-  fflush(stdout);
-}
-
-// Print the failure marker.  Output is now an error message until the
-// next ok().
-void failure(void) {
-  printf("%%%%%% FAILURE\n");
-}
-
-void error_check(struct server_state *s, int err) {
-  if (err != 0) {
-    failure();
-    char *error = futhark_context_get_error(s->ctx);
-    if (error != NULL) {
-      puts(error);
-    }
-    free(error);
-  }
-}
-
-void cmd_call(struct server_state *s, const char *args[]) {
-  const char *name = get_arg(args, 0);
-
-  struct entry_point *e = get_entry_point(s, name);
-
-  if (e == NULL) {
-    failure();
-    printf("Unknown entry point: %s\n", name);
-    return;
-  }
-
-  int num_outs = entry_num_outs(e);
-  int num_ins = entry_num_ins(e);
-  // +1 to avoid zero-size arrays, which is UB.
-  void* outs[num_outs+1];
-  void* ins[num_ins+1];
-
-  for (int i = 0; i < num_ins; i++) {
-    const char *in_name = get_arg(args, 1+num_outs+i);
-    struct variable *v = get_variable(s, in_name);
-    if (v == NULL) {
-      failure();
-      printf("Unknown variable: %s\n", in_name);
-      return;
-    }
-    if (v->value.type != e->in_types[i]) {
-      failure();
-      printf("Wrong input type.  Expected %s, got %s.\n",
-             e->in_types[i]->name, v->value.type->name);
-      return;
-    }
-    ins[i] = value_ptr(&v->value);
-  }
-
-  for (int i = 0; i < num_outs; i++) {
-    const char *out_name = get_arg(args, 1+i);
-    struct variable *v = create_variable(s, out_name, e->out_types[i]);
-    if (v == NULL) {
-      failure();
-      printf("Variable already exists: %s\n", out_name);
-      return;
-    }
-    outs[i] = value_ptr(&v->value);
-  }
-
-  int64_t t_start = get_wall_time();
-  int err = e->f(s->ctx, outs, ins);
-  err |= futhark_context_sync(s->ctx);
-  int64_t t_end = get_wall_time();
-  long long int elapsed_usec = t_end - t_start;
-  printf("runtime: %lld\n", elapsed_usec);
-
-  error_check(s, err);
-  if (err != 0) {
-    // Need to uncreate the output variables, which would otherwise be left
-    // in an uninitialised state.
-    for (int i = 0; i < num_outs; i++) {
-      const char *out_name = get_arg(args, 1+i);
-      struct variable *v = get_variable(s, out_name);
-      if (v) {
-        drop_variable(v);
-      }
-    }
-  }
-}
-
-void cmd_restore(struct server_state *s, const char *args[]) {
-  const char *fname = get_arg(args, 0);
-
-  FILE *f = fopen(fname, "rb");
-  if (f == NULL) {
-    failure();
-    printf("Failed to open %s: %s\n", fname, strerror(errno));
-    return;
-  }
-
-  int bad = 0;
-  int values = 0;
-  for (int i = 1; arg_exists(args, i); i+=2, values++) {
-    const char *vname = get_arg(args, i);
-    const char *type = get_arg(args, i+1);
-
-    const struct type *t = get_type(s, type);
-    struct variable *v = create_variable(s, vname, t);
-
-    if (v == NULL) {
-      bad = 1;
-      failure();
-      printf("Variable already exists: %s\n", vname);
-      break;
-    }
-
-    errno = 0;
-    if (t->restore(t->aux, f, s->ctx, value_ptr(&v->value)) != 0) {
-      bad = 1;
-      failure();
-      printf("Failed to restore variable %s.\n"
-             "Possibly malformed data in %s (errno: %s)\n",
-             vname, fname, strerror(errno));
-      drop_variable(v);
-      break;
-    }
-  }
-
-  if (!bad && end_of_input(f) != 0) {
-    failure();
-    printf("Expected EOF after reading %d values from %s\n",
-           values, fname);
-  }
-
-  fclose(f);
-
-  if (!bad) {
-    int err = futhark_context_sync(s->ctx);
-    error_check(s, err);
-  }
-}
-
-void cmd_store(struct server_state *s, const char *args[]) {
-  const char *fname = get_arg(args, 0);
-
-  FILE *f = fopen(fname, "wb");
-  if (f == NULL) {
-    failure();
-    printf("Failed to open %s: %s\n", fname, strerror(errno));
-  } else {
-    for (int i = 1; arg_exists(args, i); i++) {
-      const char *vname = get_arg(args, i);
-      struct variable *v = get_variable(s, vname);
-
-      if (v == NULL) {
-        failure();
-        printf("Unknown variable: %s\n", vname);
-        return;
-      }
-
-      const struct type *t = v->value.type;
-      t->store(t->aux, f, s->ctx, value_ptr(&v->value));
-    }
-    fclose(f);
-  }
-}
-
-void cmd_free(struct server_state *s, const char *args[]) {
-  for (int i = 0; arg_exists(args, i); i++) {
-    const char *name = get_arg(args, i);
-    struct variable *v = get_variable(s, name);
-
-    if (v == NULL) {
-      failure();
-      printf("Unknown variable: %s\n", name);
-      return;
-    }
-
-    const struct type *t = v->value.type;
-
-    int err = t->free(t->aux, s->ctx, value_ptr(&v->value));
-    error_check(s, err);
-    drop_variable(v);
-  }
-}
-
-void cmd_rename(struct server_state *s, const char *args[]) {
-  const char *oldname = get_arg(args, 0);
-  const char *newname = get_arg(args, 1);
-  struct variable *old = get_variable(s, oldname);
-  struct variable *new = get_variable(s, newname);
-
-  if (old == NULL) {
-    failure();
-    printf("Unknown variable: %s\n", oldname);
-    return;
-  }
-
-  if (new != NULL) {
-    failure();
-    printf("Variable already exists: %s\n", newname);
-    return;
-  }
-
-  free(old->name);
-  old->name = strdup(newname);
-}
-
-void cmd_inputs(struct server_state *s, const char *args[]) {
-  const char *name = get_arg(args, 0);
-  struct entry_point *e = get_entry_point(s, name);
-
-  if (e == NULL) {
-    failure();
-    printf("Unknown entry point: %s\n", name);
-    return;
-  }
-
-  int num_ins = entry_num_ins(e);
-  for (int i = 0; i < num_ins; i++) {
-    if (e->in_unique[i]) {
-      putchar('*');
-    }
-    puts(e->in_types[i]->name);
-  }
-}
-
-void cmd_outputs(struct server_state *s, const char *args[]) {
-  const char *name = get_arg(args, 0);
-  struct entry_point *e = get_entry_point(s, name);
-
-  if (e == NULL) {
-    failure();
-    printf("Unknown entry point: %s\n", name);
-    return;
-  }
-
-  int num_outs = entry_num_outs(e);
-  for (int i = 0; i < num_outs; i++) {
-    if (e->out_unique[i]) {
-      putchar('*');
-    }
-    puts(e->out_types[i]->name);
-  }
-}
-
-void cmd_clear(struct server_state *s, const char *args[]) {
-  (void)args;
-  int err = 0;
-  for (int i = 0; i < s->variables_capacity; i++) {
-    struct variable *v = &s->variables[i];
-    if (v->name != NULL) {
-      err |= v->value.type->free(v->value.type->aux, s->ctx, value_ptr(&v->value));
-      drop_variable(v);
-    }
-  }
-  err |= futhark_context_clear_caches(s->ctx);
-  error_check(s, err);
-}
-
-void cmd_pause_profiling(struct server_state *s, const char *args[]) {
-  (void)args;
-  futhark_context_pause_profiling(s->ctx);
-}
-
-void cmd_unpause_profiling(struct server_state *s, const char *args[]) {
-  (void)args;
-  futhark_context_unpause_profiling(s->ctx);
-}
-
-void cmd_report(struct server_state *s, const char *args[]) {
-  (void)args;
-  char *report = futhark_context_report(s->ctx);
-  if (report) {
-    puts(report);
-  } else {
-    failure();
-    report = futhark_context_get_error(s->ctx);
-    if (report) {
-      puts(report);
-    } else {
-      puts("Failed to produce profiling report.\n");
-    }
-  }
-  free(report);
-}
-
-void cmd_set_tuning_param(struct server_state *s, const char *args[]) {
-  const char *param = get_arg(args, 0);
-  const char *val_s = get_arg(args, 1);
-  size_t val = atol(val_s);
-  int err = futhark_context_config_set_tuning_param(s->cfg, param, val);
-
-  error_check(s, err);
-
-  if (err != 0) {
-    printf("Failed to set tuning parameter %s to %ld\n", param, (long)val);
-  }
-}
-
-void cmd_tuning_params(struct server_state *s, const char *args[]) {
-  const char *name = get_arg(args, 0);
-  struct entry_point *e = get_entry_point(s, name);
-
-  if (e == NULL) {
-    failure();
-    printf("Unknown entry point: %s\n", name);
-    return;
-  }
-
-  const char **params = e->tuning_params;
-  for (int i = 0; params[i] != NULL; i++) {
-    printf("%s\n", params[i]);
-  }
-}
-
-void cmd_tuning_param_class(struct server_state *s, const char *args[]) {
-  (void)s;
-  const char *param = get_arg(args, 0);
-
-  int n = futhark_get_tuning_param_count();
-
-  for (int i = 0; i < n; i++) {
-    if (strcmp(futhark_get_tuning_param_name(i), param) == 0) {
-      printf("%s\n", futhark_get_tuning_param_class(i));
-      return;
-    }
-  }
-
-  failure();
-  printf("Unknown tuning parameter: %s\n", param);
-}
-
-void cmd_fields(struct server_state *s, const char *args[]) {
-  const char *type = get_arg(args, 0);
-  const struct type *t = get_type(s, type);
-  const struct record *r = t->record;
-
-  if (r == NULL) {
-    failure();
-    printf("Not a record type\n");
-    return;
-  }
-
-  for (int i = 0; i < r->num_fields; i++) {
-    const struct field f = r->fields[i];
-    printf("%s %s\n", f.name, f.type->name);
-  }
-}
-
-void cmd_project(struct server_state *s, const char *args[]) {
-  const char *to_name = get_arg(args, 0);
-  const char *from_name = get_arg(args, 1);
-  const char *field_name = get_arg(args, 2);
-
-  struct variable *from = get_variable(s, from_name);
-
-  if (from == NULL) {
-    failure();
-    printf("Unknown variable: %s\n", from_name);
-    return;
-  }
-
-  const struct type *from_type = from->value.type;
-  const struct record *r = from_type->record;
-
-  if (r == NULL) {
-    failure();
-    printf("Not a record type\n");
-    return;
-  }
-
-  const struct field *field = NULL;
-  for (int i = 0; i < r->num_fields; i++) {
-    if (strcmp(r->fields[i].name, field_name) == 0) {
-      field = &r->fields[i];
-      break;
-    }
-  }
-
-  if (field == NULL) {
-    failure();
-    printf("No such field\n");
-  }
-
-  struct variable *to = create_variable(s, to_name, field->type);
-
-  if (to == NULL) {
-    failure();
-    printf("Variable already exists: %s\n", to_name);
-    return;
-  }
-
-  field->project(s->ctx, value_ptr(&to->value), from->value.value.v_ptr);
-}
-
-void cmd_new(struct server_state *s, const char *args[]) {
-  const char *to_name = get_arg(args, 0);
-  const char *type_name = get_arg(args, 1);
-  const struct type *type = get_type(s, type_name);
-  struct variable *to = create_variable(s, to_name, type);
-
-  if (to == NULL) {
-    failure();
-    printf("Variable already exists: %s\n", to_name);
-    return;
-  }
-
-  const struct record* r = type->record;
-
-  if (r == NULL) {
-    failure();
-    printf("Not a record type\n");
-    return;
-  }
-
-  int num_args = 0;
-  for (int i = 2; arg_exists(args, i); i++) {
-    num_args++;
-  }
-
-  if (num_args != r->num_fields) {
-    failure();
-    printf("%d fields expected but %d values provided.\n", num_args, r->num_fields);
-    return;
-  }
-
-  const void** value_ptrs = alloca(num_args * sizeof(void*));
-
-  for (int i = 0; i < num_args; i++) {
-    struct variable* v = get_variable(s, args[2+i]);
-
-    if (v == NULL) {
-      failure();
-      printf("Unknown variable: %s\n", args[2+i]);
-      return;
-    }
-
-    if (strcmp(v->value.type->name, r->fields[i].type->name) != 0) {
-      failure();
-      printf("Field %s mismatch: expected type %s, got %s\n",
-             r->fields[i].name, r->fields[i].type->name, v->value.type->name);
-      return;
-    }
-
-    value_ptrs[i] = value_ptr(&v->value);
-  }
-
-  r->new(s->ctx, value_ptr(&to->value), value_ptrs);
-}
-
-void cmd_entry_points(struct server_state *s, const char *args[]) {
-  (void)args;
-  for (int i = 0; s->prog.entry_points[i].name; i++) {
-    puts(s->prog.entry_points[i].name);
-  }
-}
-
-void cmd_types(struct server_state *s, const char *args[]) {
-  (void)args;
-  for (int i = 0; s->prog.types[i] != NULL; i++) {
-    puts(s->prog.types[i]->name);
-  }
-}
-
-char *next_word(char **line) {
-  char *p = *line;
-
-  while (isspace(*p)) {
-    p++;
-  }
-
-  if (*p == 0) {
-    return NULL;
-  }
-
-  if (*p == '"') {
-    char *save = p+1;
-    // Skip ahead till closing quote.
-    p++;
-
-    while (*p && *p != '"') {
-      p++;
-    }
-
-    if (*p == '"') {
-      *p = 0;
-      *line = p+1;
-      return save;
-    } else {
-      return NULL;
-    }
-  } else {
-    char *save = p;
-    // Skip ahead till next whitespace.
-
-    while (*p && !isspace(*p)) {
-      p++;
-    }
-
-    if (*p) {
-      *p = 0;
-      *line = p+1;
-    } else {
-      *line = p;
-    }
-    return save;
-  }
-}
-
-void process_line(struct server_state *s, char *line) {
-  int max_num_tokens = 1000;
-  const char* tokens[max_num_tokens];
-  int num_tokens = 0;
-
-  while ((tokens[num_tokens] = next_word(&line)) != NULL) {
-    num_tokens++;
-    if (num_tokens == max_num_tokens) {
-      futhark_panic(1, "Line too long.\n");
-    }
-  }
-
-  const char *command = tokens[0];
-
-  if (command == NULL) {
-    failure();
-    printf("Empty line\n");
-  } else if (strcmp(command, "call") == 0) {
-    cmd_call(s, tokens+1);
-  } else if (strcmp(command, "restore") == 0) {
-    cmd_restore(s, tokens+1);
-  } else if (strcmp(command, "store") == 0) {
-    cmd_store(s, tokens+1);
-  } else if (strcmp(command, "free") == 0) {
-    cmd_free(s, tokens+1);
-  } else if (strcmp(command, "rename") == 0) {
-    cmd_rename(s, tokens+1);
-  } else if (strcmp(command, "inputs") == 0) {
-    cmd_inputs(s, tokens+1);
-  } else if (strcmp(command, "outputs") == 0) {
-    cmd_outputs(s, tokens+1);
-  } else if (strcmp(command, "clear") == 0) {
-    cmd_clear(s, tokens+1);
-  } else if (strcmp(command, "pause_profiling") == 0) {
-    cmd_pause_profiling(s, tokens+1);
-  } else if (strcmp(command, "unpause_profiling") == 0) {
-    cmd_unpause_profiling(s, tokens+1);
-  } else if (strcmp(command, "report") == 0) {
-    cmd_report(s, tokens+1);
-  } else if (strcmp(command, "set_tuning_param") == 0) {
-    cmd_set_tuning_param(s, tokens+1);
-  } else if (strcmp(command, "tuning_params") == 0) {
-    cmd_tuning_params(s, tokens+1);
-  } else if (strcmp(command, "tuning_param_class") == 0) {
-    cmd_tuning_param_class(s, tokens+1);
-  } else if (strcmp(command, "fields") == 0) {
-    cmd_fields(s, tokens+1);
-  } else if (strcmp(command, "new") == 0) {
-    cmd_new(s, tokens+1);
-  } else if (strcmp(command, "project") == 0) {
-    cmd_project(s, tokens+1);
-  } else if (strcmp(command, "entry_points") == 0) {
-    cmd_entry_points(s, tokens+1);
-  } else if (strcmp(command, "types") == 0) {
-    cmd_types(s, tokens+1);
-  } else {
-    futhark_panic(1, "Unknown command: %s\n", command);
-  }
-}
-
-void run_server(struct futhark_prog *prog,
-                struct futhark_context_config *cfg,
-                struct futhark_context *ctx) {
-  char *line = NULL;
-  size_t buflen = 0;
-  ssize_t linelen;
-
-  struct server_state s = {
-    .cfg = cfg,
-    .ctx = ctx,
-    .variables_capacity = 100,
-    .prog = *prog
-  };
-
-  s.variables = malloc(s.variables_capacity * sizeof(struct variable));
-
-  for (int i = 0; i < s.variables_capacity; i++) {
-    s.variables[i].name = NULL;
-  }
-
-  ok();
-  while ((linelen = getline(&line, &buflen, stdin)) > 0) {
-    process_line(&s, line);
-    ok();
-  }
-
-  free(s.variables);
-  free(line);
-}
-
-// The aux struct lets us write generic method implementations without
-// code duplication.
-
-typedef void* (*array_new_fn)(struct futhark_context *, const void*, const int64_t*);
-typedef const int64_t* (*array_shape_fn)(struct futhark_context*, void*);
-typedef int (*array_values_fn)(struct futhark_context*, void*, void*);
-typedef int (*array_free_fn)(struct futhark_context*, void*);
-
-struct array_aux {
-  int rank;
-  const struct primtype_info_t* info;
-  const char *name;
-  array_new_fn new;
-  array_shape_fn shape;
-  array_values_fn values;
-  array_free_fn free;
-};
-
-int restore_array(const struct array_aux *aux, FILE *f,
-                  struct futhark_context *ctx, void *p) {
-  void *data = NULL;
-  int64_t shape[aux->rank];
-  if (read_array(f, aux->info, &data, shape, aux->rank) != 0) {
-    return 1;
-  }
-
-  void *arr = aux->new(ctx, data, shape);
-  if (arr == NULL) {
-    return 1;
-  }
-  int err = futhark_context_sync(ctx);
-  *(void**)p = arr;
-  free(data);
-  return err;
-}
-
-void store_array(const struct array_aux *aux, FILE *f,
-                 struct futhark_context *ctx, void *p) {
-  void *arr = *(void**)p;
-  const int64_t *shape = aux->shape(ctx, arr);
-  int64_t size = sizeof(aux->info->size);
-  for (int i = 0; i < aux->rank; i++) {
-    size *= shape[i];
-  }
-  int32_t *data = malloc(size);
-  assert(aux->values(ctx, arr, data) == 0);
-  assert(futhark_context_sync(ctx) == 0);
-  assert(write_array(f, 1, aux->info, data, shape, aux->rank) == 0);
-  free(data);
-}
-
-int free_array(const struct array_aux *aux,
-               struct futhark_context *ctx, void *p) {
-  void *arr = *(void**)p;
-  return aux->free(ctx, arr);
-}
-
-typedef void* (*opaque_restore_fn)(struct futhark_context*, void*);
-typedef int (*opaque_store_fn)(struct futhark_context*, const void*, void **, size_t *);
-typedef int (*opaque_free_fn)(struct futhark_context*, void*);
-
-struct opaque_aux {
-  opaque_restore_fn restore;
-  opaque_store_fn store;
-  opaque_free_fn free;
-};
-
-int restore_opaque(const struct opaque_aux *aux, FILE *f,
-                   struct futhark_context *ctx, void *p) {
-  // We have a problem: we need to load data from 'f', since the
-  // restore function takes a pointer, but we don't know how much we
-  // need (and cannot possibly).  So we do something hacky: we read
-  // *all* of the file, pass all of the data to the restore function
-  // (which doesn't care if there's extra at the end), then we compute
-  // how much space the the object actually takes in serialised form
-  // and rewind the file to that position.  The only downside is more IO.
-  size_t start = ftell(f);
-  size_t size;
-  char *bytes = fslurp_file(f, &size);
-  void *obj = aux->restore(ctx, bytes);
-  free(bytes);
-  if (obj != NULL) {
-    *(void**)p = obj;
-    size_t obj_size;
-    (void)aux->store(ctx, obj, NULL, &obj_size);
-    fseek(f, start+obj_size, SEEK_SET);
-    return 0;
-  } else {
-    fseek(f, start, SEEK_SET);
-    return 1;
-  }
-}
-
-void store_opaque(const struct opaque_aux *aux, FILE *f,
-                  struct futhark_context *ctx, void *p) {
-  void *obj = *(void**)p;
-  size_t obj_size;
-  void *data = NULL;
-  (void)aux->store(ctx, obj, &data, &obj_size);
-  assert(futhark_context_sync(ctx) == 0);
-  fwrite(data, sizeof(char), obj_size, f);
-  free(data);
-}
-
-int free_opaque(const struct opaque_aux *aux,
-                struct futhark_context *ctx, void *p) {
-  void *obj = *(void**)p;
-  return aux->free(ctx, obj);
-}
-
-// End of server.h.
-
+static int binary_output = 0;
+static int print_result = 1;
+static FILE *runtime_file;
+static int perform_warmup = 0;
+static int num_runs = 1;
+static const char *entry_point = "main";
 // Start of tuning.h.
 
 
@@ -2920,53 +1940,50 @@ static char* load_tuning_file(const char *fname,
 
 // End of tuning.h.
 
-const struct type type_ZMZNi32;
-void *futhark_new_i32_1d_wrap(struct futhark_context *ctx, const void *p, const int64_t *shape)
-{
-    return futhark_new_i32_1d(ctx, p, shape[0]);
-}
-const struct array_aux type_ZMZNi32_aux = {.name ="[]i32", .rank =1, .info =&i32_info, .new =(array_new_fn) futhark_new_i32_1d_wrap, .free =(array_free_fn) futhark_free_i32_1d, .shape =(array_shape_fn) futhark_shape_i32_1d, .values =(array_values_fn) futhark_values_i32_1d};
-const struct type type_ZMZNi32 = {.name ="[]i32", .restore =(restore_fn) restore_array, .store =(store_fn) store_array, .free =(free_fn) free_array, .aux =&type_ZMZNi32_aux};
-const struct type *main_out_types[] = {&type_i32, NULL};
-bool main_out_unique[] = {false};
-const struct type *main_in_types[] = {&type_ZMZNi32, NULL};
-bool main_in_unique[] = {false};
-const char *main_tuning_params[] = {NULL};
-int call_main(struct futhark_context *ctx, void **outs, void **ins)
-{
-    int32_t *out0 = outs[0];
-    struct futhark_i32_1d * in0 = *(struct futhark_i32_1d * *) ins[0];
-    
-    return futhark_entry_main(ctx, out0, in0);
-}
-const struct type *types[] = {&type_i8, &type_i16, &type_i32, &type_i64, &type_u8, &type_u16, &type_u32, &type_u64, &type_f16, &type_f32, &type_f64, &type_bool, &type_ZMZNi32, NULL};
-struct entry_point entry_points[] = {{.name ="main", .f =call_main, .tuning_params =main_tuning_params, .in_types =main_in_types, .out_types =main_out_types, .in_unique =main_in_unique, .out_unique =main_out_unique}, {.name =NULL}};
-struct futhark_prog prog = {.types =types, .entry_points =entry_points};
 int parse_options(struct futhark_context_config *cfg, int argc, char *const argv[])
 {
     int ch;
-    static struct option long_options[] = {{"debugging", no_argument, NULL, 1}, {"log", no_argument, NULL, 2}, {"profile", no_argument, NULL, 3}, {"help", no_argument, NULL, 4}, {"print-params", no_argument, NULL, 5}, {"param", required_argument, NULL, 6}, {"tuning", required_argument, NULL, 7}, {"cache-file", required_argument, NULL, 8}, {0, 0, 0, 0}};
-    static char *option_descriptions = "  -D/--debugging     Perform possibly expensive internal correctness checks and verbose logging.\n  -L/--log           Print various low-overhead logging information while running.\n  -P/--profile       Enable the collection of profiling information.\n  -h/--help          Print help information and exit.\n  --print-params     Print all tuning parameters that can be set with --param or --tuning.\n  --param ASSIGNMENT Set a tuning parameter to the given value.\n  --tuning FILE      Read size=value assignments from the given file.\n  --cache-file FILE  Store program cache here.\n";
+    static struct option long_options[] = {{"write-runtime-to", required_argument, NULL, 1}, {"runs", required_argument, NULL, 2}, {"debugging", no_argument, NULL, 3}, {"log", no_argument, NULL, 4}, {"profile", no_argument, NULL, 5}, {"entry-point", required_argument, NULL, 6}, {"binary-output", no_argument, NULL, 7}, {"no-print-result", no_argument, NULL, 8}, {"help", no_argument, NULL, 9}, {"print-params", no_argument, NULL, 10}, {"param", required_argument, NULL, 11}, {"tuning", required_argument, NULL, 12}, {"cache-file", required_argument, NULL, 13}, {0, 0, 0, 0}};
+    static char *option_descriptions = "  -t/--write-runtime-to FILE Print the time taken to execute the program to the indicated file, an integral number of microseconds.\n  -r/--runs INT              Perform NUM runs of the program.\n  -D/--debugging             Perform possibly expensive internal correctness checks and verbose logging.\n  -L/--log                   Print various low-overhead logging information to stderr while running.\n  -P/--profile               Enable the collection of profiling information.\n  -e/--entry-point NAME      The entry point to run. Defaults to main.\n  -b/--binary-output         Print the program result in the binary output format.\n  -n/--no-print-result       Do not print the program result.\n  -h/--help                  Print help information and exit.\n  --print-params             Print all tuning parameters that can be set with --param or --tuning.\n  --param ASSIGNMENT         Set a tuning parameter to the given value.\n  --tuning FILE              Read size=value assignments from the given file.\n  --cache-file FILE          Store program cache here.\n";
     
-    while ((ch = getopt_long(argc, argv, ":DLPh", long_options, NULL)) != -1) {
-        if (ch == 1 || ch == 'D')
+    while ((ch = getopt_long(argc, argv, ":t:r:DLPe:bnh", long_options, NULL)) != -1) {
+        if (ch == 1 || ch == 't') {
+            runtime_file = fopen(optarg, "w");
+            if (runtime_file == NULL)
+                futhark_panic(1, "Cannot open %s: %s\n", optarg, strerror(errno));
+        }
+        if (ch == 2 || ch == 'r') {
+            num_runs = atoi(optarg);
+            perform_warmup = 1;
+            if (num_runs <= 0)
+                futhark_panic(1, "Need a positive number of runs, not %s\n", optarg);
+        }
+        if (ch == 3 || ch == 'D')
             futhark_context_config_set_debugging(cfg, 1);
-        if (ch == 2 || ch == 'L')
+        if (ch == 4 || ch == 'L')
             futhark_context_config_set_logging(cfg, 1);
-        if (ch == 3 || ch == 'P')
+        if (ch == 5 || ch == 'P')
             futhark_context_config_set_profiling(cfg, 1);
-        if (ch == 4 || ch == 'h') {
-            printf("Usage: %s [OPTIONS]...\nOptions:\n\n%s\nFor more information, consult the Futhark User's Guide or the man pages.\n", fut_progname, option_descriptions);
+        if (ch == 6 || ch == 'e') {
+            if (entry_point != NULL)
+                entry_point = optarg;
+        }
+        if (ch == 7 || ch == 'b')
+            binary_output = 1;
+        if (ch == 8 || ch == 'n')
+            print_result = 0;
+        if (ch == 9 || ch == 'h') {
+            printf("Usage: %s [OPTION]...\nOptions:\n\n%s\nFor more information, consult the Futhark User's Guide or the man pages.\n", fut_progname, option_descriptions);
             exit(0);
         }
-        if (ch == 5) {
+        if (ch == 10) {
             int n = futhark_get_tuning_param_count();
             
             for (int i = 0; i < n; i++)
                 printf("%s (%s)\n", futhark_get_tuning_param_name(i), futhark_get_tuning_param_class(i));
             exit(0);
         }
-        if (ch == 6) {
+        if (ch == 11) {
             char *name = optarg;
             char *equals = strstr(optarg, "=");
             char *value_str = equals != NULL ? equals + 1 : optarg;
@@ -2974,30 +1991,188 @@ int parse_options(struct futhark_context_config *cfg, int argc, char *const argv
             
             if (equals != NULL) {
                 *equals = 0;
-                if (futhark_context_config_set_tuning_param(cfg, name, value) != 0)
+                if (futhark_context_config_set_tuning_param(cfg, name, (size_t) value) != 0)
                     futhark_panic(1, "Unknown size: %s\n", name);
             } else
                 futhark_panic(1, "Invalid argument for size option: %s\n", optarg);
         }
-        if (ch == 7) {
+        if (ch == 12) {
             char *ret = load_tuning_file(optarg, cfg, (int (*)(void *, const char *, size_t)) futhark_context_config_set_tuning_param);
             
             if (ret != NULL)
                 futhark_panic(1, "When loading tuning file '%s': %s\n", optarg, ret);
         }
-        if (ch == 8)
+        if (ch == 13)
             futhark_context_config_set_cache_file(cfg, optarg);
         if (ch == ':')
             futhark_panic(-1, "Missing argument for option %s\n", argv[optind - 1]);
         if (ch == '?') {
-            fprintf(stderr, "Usage: %s [OPTIONS]...\nOptions:\n\n%s\n", fut_progname, "  -D/--debugging     Perform possibly expensive internal correctness checks and verbose logging.\n  -L/--log           Print various low-overhead logging information while running.\n  -P/--profile       Enable the collection of profiling information.\n  -h/--help          Print help information and exit.\n  --print-params     Print all tuning parameters that can be set with --param or --tuning.\n  --param ASSIGNMENT Set a tuning parameter to the given value.\n  --tuning FILE      Read size=value assignments from the given file.\n  --cache-file FILE  Store program cache here.\n");
+            fprintf(stderr, "Usage: %s [OPTIONS]...\nOptions:\n\n%s\n", fut_progname, "  -t/--write-runtime-to FILE Print the time taken to execute the program to the indicated file, an integral number of microseconds.\n  -r/--runs INT              Perform NUM runs of the program.\n  -D/--debugging             Perform possibly expensive internal correctness checks and verbose logging.\n  -L/--log                   Print various low-overhead logging information to stderr while running.\n  -P/--profile               Enable the collection of profiling information.\n  -e/--entry-point NAME      The entry point to run. Defaults to main.\n  -b/--binary-output         Print the program result in the binary output format.\n  -n/--no-print-result       Do not print the program result.\n  -h/--help                  Print help information and exit.\n  --print-params             Print all tuning parameters that can be set with --param or --tuning.\n  --param ASSIGNMENT         Set a tuning parameter to the given value.\n  --tuning FILE              Read size=value assignments from the given file.\n  --cache-file FILE          Store program cache here.\n");
             futhark_panic(1, "Unknown option: %s\n", argv[optind - 1]);
         }
     }
     return optind;
 }
+static int futrts_cli_entry_main(struct futhark_context *ctx)
+{
+    int64_t t_start, t_end;
+    int time_runs = 0, profile_run = 0;
+    int retval = 0;
+    
+    // We do not want to profile all the initialisation.
+    futhark_context_pause_profiling(ctx);
+    // Declare and read input.
+    set_binary_mode(stdin);
+    
+    struct futhark_i64_1d * read_value_0;
+    int64_t read_shape_0[1];
+    int64_t *read_arr_0 = NULL;
+    
+    errno = 0;
+    if (read_array(stdin, &i64_info, (void **) &read_arr_0, read_shape_0, 1) != 0)
+        futhark_panic(1, "Cannot read input #%d of type %s (errno: %s).\n", 0, "[]i64", strerror(errno));
+    
+    struct futhark_f32_1d * read_value_1;
+    int64_t read_shape_1[1];
+    float *read_arr_1 = NULL;
+    
+    errno = 0;
+    if (read_array(stdin, &f32_info, (void **) &read_arr_1, read_shape_1, 1) != 0)
+        futhark_panic(1, "Cannot read input #%d of type %s (errno: %s).\n", 1, "[]f32", strerror(errno));
+    
+    struct futhark_i64_1d * read_value_2;
+    int64_t read_shape_2[1];
+    int64_t *read_arr_2 = NULL;
+    
+    errno = 0;
+    if (read_array(stdin, &i64_info, (void **) &read_arr_2, read_shape_2, 1) != 0)
+        futhark_panic(1, "Cannot read input #%d of type %s (errno: %s).\n", 2, "[]i64", strerror(errno));
+    
+    struct futhark_f32_1d * read_value_3;
+    int64_t read_shape_3[1];
+    float *read_arr_3 = NULL;
+    
+    errno = 0;
+    if (read_array(stdin, &f32_info, (void **) &read_arr_3, read_shape_3, 1) != 0)
+        futhark_panic(1, "Cannot read input #%d of type %s (errno: %s).\n", 3, "[]f32", strerror(errno));
+    if (end_of_input(stdin) != 0)
+        futhark_panic(1, "Expected EOF on stdin after reading input for \"%s\".\n", "main");
+    
+    struct futhark_f32_1d * result_0;
+    
+    if (perform_warmup) {
+        int r;
+        
+        assert((read_value_0 = futhark_new_i64_1d(ctx, read_arr_0, read_shape_0[0])) != NULL);
+        assert((read_value_1 = futhark_new_f32_1d(ctx, read_arr_1, read_shape_1[0])) != NULL);
+        assert((read_value_2 = futhark_new_i64_1d(ctx, read_arr_2, read_shape_2[0])) != NULL);
+        assert((read_value_3 = futhark_new_f32_1d(ctx, read_arr_3, read_shape_3[0])) != NULL);
+        if (futhark_context_sync(ctx) != 0)
+            futhark_panic(1, "%s", futhark_context_get_error(ctx));
+        ;
+        // Only profile last run.
+        if (profile_run)
+            futhark_context_unpause_profiling(ctx);
+        t_start = get_wall_time();
+        r = futhark_entry_main(ctx, &result_0, read_value_0, read_value_1, read_value_2, read_value_3);
+        if (r != 0)
+            futhark_panic(1, "%s", futhark_context_get_error(ctx));
+        if (futhark_context_sync(ctx) != 0)
+            futhark_panic(1, "%s", futhark_context_get_error(ctx));
+        ;
+        if (profile_run)
+            futhark_context_pause_profiling(ctx);
+        t_end = get_wall_time();
+        
+        long elapsed_usec = t_end - t_start;
+        
+        if (time_runs && runtime_file != NULL) {
+            fprintf(runtime_file, "%lld\n", (long long) elapsed_usec);
+            fflush(runtime_file);
+        }
+        assert(futhark_free_i64_1d(ctx, read_value_0) == 0);
+        assert(futhark_free_f32_1d(ctx, read_value_1) == 0);
+        assert(futhark_free_i64_1d(ctx, read_value_2) == 0);
+        assert(futhark_free_f32_1d(ctx, read_value_3) == 0);
+        assert(futhark_free_f32_1d(ctx, result_0) == 0);
+    }
+    time_runs = 1;
+    // Proper run.
+    for (int run = 0; run < num_runs; run++) {
+        // Only profile last run.
+        profile_run = run == num_runs - 1;
+        
+        int r;
+        
+        assert((read_value_0 = futhark_new_i64_1d(ctx, read_arr_0, read_shape_0[0])) != NULL);
+        assert((read_value_1 = futhark_new_f32_1d(ctx, read_arr_1, read_shape_1[0])) != NULL);
+        assert((read_value_2 = futhark_new_i64_1d(ctx, read_arr_2, read_shape_2[0])) != NULL);
+        assert((read_value_3 = futhark_new_f32_1d(ctx, read_arr_3, read_shape_3[0])) != NULL);
+        if (futhark_context_sync(ctx) != 0)
+            futhark_panic(1, "%s", futhark_context_get_error(ctx));
+        ;
+        // Only profile last run.
+        if (profile_run)
+            futhark_context_unpause_profiling(ctx);
+        t_start = get_wall_time();
+        r = futhark_entry_main(ctx, &result_0, read_value_0, read_value_1, read_value_2, read_value_3);
+        if (r != 0)
+            futhark_panic(1, "%s", futhark_context_get_error(ctx));
+        if (futhark_context_sync(ctx) != 0)
+            futhark_panic(1, "%s", futhark_context_get_error(ctx));
+        ;
+        if (profile_run)
+            futhark_context_pause_profiling(ctx);
+        t_end = get_wall_time();
+        
+        long elapsed_usec = t_end - t_start;
+        
+        if (time_runs && runtime_file != NULL) {
+            fprintf(runtime_file, "%lld\n", (long long) elapsed_usec);
+            fflush(runtime_file);
+        }
+        assert(futhark_free_i64_1d(ctx, read_value_0) == 0);
+        assert(futhark_free_f32_1d(ctx, read_value_1) == 0);
+        assert(futhark_free_i64_1d(ctx, read_value_2) == 0);
+        assert(futhark_free_f32_1d(ctx, read_value_3) == 0);
+        if (run < num_runs - 1) {
+            assert(futhark_free_f32_1d(ctx, result_0) == 0);
+        }
+    }
+    free(read_arr_0);
+    free(read_arr_1);
+    free(read_arr_2);
+    free(read_arr_3);
+    if (print_result) {
+        // Print the final result.
+        if (binary_output)
+            set_binary_mode(stdout);
+        {
+            float *arr = calloc(futhark_shape_f32_1d(ctx, result_0)[0], f32_info.size);
+            
+            assert(arr != NULL);
+            assert(futhark_values_f32_1d(ctx, result_0, arr) == 0);
+            assert(futhark_context_sync(ctx) == 0);
+            write_array(stdout, binary_output, &f32_info, arr, futhark_shape_f32_1d(ctx, result_0), 1);
+            free(arr);
+        }
+        printf("\n");
+    }
+    
+  print_end:
+    { }
+    assert(futhark_free_f32_1d(ctx, result_0) == 0);
+    return retval;
+}
+typedef int entry_point_fun(struct futhark_context *);
+struct entry_point_entry {
+    const char *name;
+    entry_point_fun *fun;
+};
 int main(int argc, char **argv)
 {
+    int retval = 0;
+    
     fut_progname = argv[0];
     
     struct futhark_context_config *cfg = futhark_context_config_new();
@@ -3014,16 +2189,41 @@ int main(int argc, char **argv)
     struct futhark_context *ctx = futhark_context_new(cfg);
     
     assert(ctx != NULL);
-    futhark_context_set_logging_file(ctx, stdout);
     
     char *error = futhark_context_get_error(ctx);
     
     if (error != NULL)
-        futhark_panic(1, "Error during context initialisation:\n%s", error);
-    if (entry_point != NULL)
-        run_server(&prog, cfg, ctx);
+        futhark_panic(1, "%s", error);
+    
+    struct entry_point_entry entry_points[] = {{.name ="main", .fun =futrts_cli_entry_main}};
+    
+    if (entry_point != NULL) {
+        int num_entry_points = sizeof(entry_points) / sizeof(entry_points[0]);
+        entry_point_fun *entry_point_fun = NULL;
+        
+        for (int i = 0; i < num_entry_points; i++) {
+            if (strcmp(entry_points[i].name, entry_point) == 0) {
+                entry_point_fun = entry_points[i].fun;
+                break;
+            }
+        }
+        if (entry_point_fun == NULL) {
+            fprintf(stderr, "No entry point '%s'.  Select another with --entry-point.  Options are:\n", entry_point);
+            for (int i = 0; i < num_entry_points; i++)
+                fprintf(stderr, "%s\n", entry_points[i].name);
+            return 1;
+        }
+        if (isatty(fileno(stdin))) {
+            fprintf(stderr, "Reading input from TTY.\n");
+            fprintf(stderr, "Send EOF (CTRL-d) after typing all input values.\n");
+        }
+        retval = entry_point_fun(ctx);
+        if (runtime_file != NULL)
+            fclose(runtime_file);
+    }
     futhark_context_free(ctx);
     futhark_context_config_free(cfg);
+    return retval;
 }
 
 #ifdef _MSC_VER
@@ -7759,7 +6959,7 @@ GEN_LMAD_COPY(8b, uint64_t)
 
 #define FUTHARK_FUN_ATTR static
 
-FUTHARK_FUN_ATTR int futrts_entry_main(struct futhark_context *ctx, int32_t *out_prim_out_6248, struct memblock xs_mem_6242, int64_t dz2080U_5864);
+FUTHARK_FUN_ATTR int futrts_entry_main(struct futhark_context *ctx, struct memblock *mem_out_p_5576, struct memblock mat_inds_mem_5556, struct memblock mat_vals_mem_5557, struct memblock shp_mem_5558, struct memblock vct_mem_5559, int64_t n_5456, int64_t m_5457, int64_t dz2080U_5458);
 
 static int init_constants(struct futhark_context *ctx)
 {
@@ -7776,15 +6976,100 @@ static int free_constants(struct futhark_context *ctx)
     (void) ctx;
     return 0;
 }
-struct futhark_i32_1d {
+struct futhark_i64_1d {
     struct memblock mem;
     int64_t shape[1];
 };
-struct futhark_i32_1d *futhark_new_i32_1d(struct futhark_context *ctx, const int32_t *data, int64_t dim0)
+struct futhark_i64_1d *futhark_new_i64_1d(struct futhark_context *ctx, const int64_t *data, int64_t dim0)
 {
     int err = 0;
-    struct futhark_i32_1d *bad = NULL;
-    struct futhark_i32_1d *arr = (struct futhark_i32_1d *) malloc(sizeof(struct futhark_i32_1d));
+    struct futhark_i64_1d *bad = NULL;
+    struct futhark_i64_1d *arr = (struct futhark_i64_1d *) malloc(sizeof(struct futhark_i64_1d));
+    
+    if (arr == NULL)
+        return bad;
+    lock_lock(&ctx->lock);
+    arr->mem.references = NULL;
+    if (memblock_alloc(ctx, &arr->mem, dim0 * 8, "arr->mem"))
+        err = 1;
+    arr->shape[0] = dim0;
+    if ((size_t) dim0 * 8 > 0)
+        memmove(arr->mem.mem + 0, (const unsigned char *) data + 0, (size_t) dim0 * 8);
+    lock_unlock(&ctx->lock);
+    if (err != 0) {
+        free(arr);
+        return bad;
+    }
+    return arr;
+}
+struct futhark_i64_1d *futhark_new_raw_i64_1d(struct futhark_context *ctx, unsigned char *data, int64_t dim0)
+{
+    int err = 0;
+    struct futhark_i64_1d *bad = NULL;
+    struct futhark_i64_1d *arr = (struct futhark_i64_1d *) malloc(sizeof(struct futhark_i64_1d));
+    
+    if (arr == NULL)
+        return bad;
+    lock_lock(&ctx->lock);
+    arr->mem.references = NULL;
+    arr->mem.mem = data;
+    arr->shape[0] = dim0;
+    lock_unlock(&ctx->lock);
+    return arr;
+}
+int futhark_free_i64_1d(struct futhark_context *ctx, struct futhark_i64_1d *arr)
+{
+    lock_lock(&ctx->lock);
+    if (memblock_unref(ctx, &arr->mem, "arr->mem") != 0)
+        return 1;
+    lock_unlock(&ctx->lock);
+    free(arr);
+    return 0;
+}
+int futhark_values_i64_1d(struct futhark_context *ctx, struct futhark_i64_1d *arr, int64_t *data)
+{
+    int err = 0;
+    
+    lock_lock(&ctx->lock);
+    if ((size_t) arr->shape[0] * 8 > 0)
+        memmove((unsigned char *) data + 0, arr->mem.mem + 0, (size_t) arr->shape[0] * 8);
+    lock_unlock(&ctx->lock);
+    return err;
+}
+int futhark_index_i64_1d(struct futhark_context *ctx, int64_t *out, struct futhark_i64_1d *arr, int64_t i0)
+{
+    int err = 0;
+    
+    if (i0 >= 0 && i0 < arr->shape[0]) {
+        lock_lock(&ctx->lock);
+        if (8 > 0)
+            memmove((unsigned char *) out + 0, arr->mem.mem + 8 * (i0 * 1), 8);
+        lock_unlock(&ctx->lock);
+    } else {
+        err = 1;
+        set_error(ctx, strdup("Index out of bounds."));
+    }
+    return err;
+}
+unsigned char *futhark_values_raw_i64_1d(struct futhark_context *ctx, struct futhark_i64_1d *arr)
+{
+    (void) ctx;
+    return arr->mem.mem;
+}
+const int64_t *futhark_shape_i64_1d(struct futhark_context *ctx, struct futhark_i64_1d *arr)
+{
+    (void) ctx;
+    return arr->shape;
+}
+struct futhark_f32_1d {
+    struct memblock mem;
+    int64_t shape[1];
+};
+struct futhark_f32_1d *futhark_new_f32_1d(struct futhark_context *ctx, const float *data, int64_t dim0)
+{
+    int err = 0;
+    struct futhark_f32_1d *bad = NULL;
+    struct futhark_f32_1d *arr = (struct futhark_f32_1d *) malloc(sizeof(struct futhark_f32_1d));
     
     if (arr == NULL)
         return bad;
@@ -7802,11 +7087,11 @@ struct futhark_i32_1d *futhark_new_i32_1d(struct futhark_context *ctx, const int
     }
     return arr;
 }
-struct futhark_i32_1d *futhark_new_raw_i32_1d(struct futhark_context *ctx, unsigned char *data, int64_t dim0)
+struct futhark_f32_1d *futhark_new_raw_f32_1d(struct futhark_context *ctx, unsigned char *data, int64_t dim0)
 {
     int err = 0;
-    struct futhark_i32_1d *bad = NULL;
-    struct futhark_i32_1d *arr = (struct futhark_i32_1d *) malloc(sizeof(struct futhark_i32_1d));
+    struct futhark_f32_1d *bad = NULL;
+    struct futhark_f32_1d *arr = (struct futhark_f32_1d *) malloc(sizeof(struct futhark_f32_1d));
     
     if (arr == NULL)
         return bad;
@@ -7817,7 +7102,7 @@ struct futhark_i32_1d *futhark_new_raw_i32_1d(struct futhark_context *ctx, unsig
     lock_unlock(&ctx->lock);
     return arr;
 }
-int futhark_free_i32_1d(struct futhark_context *ctx, struct futhark_i32_1d *arr)
+int futhark_free_f32_1d(struct futhark_context *ctx, struct futhark_f32_1d *arr)
 {
     lock_lock(&ctx->lock);
     if (memblock_unref(ctx, &arr->mem, "arr->mem") != 0)
@@ -7826,7 +7111,7 @@ int futhark_free_i32_1d(struct futhark_context *ctx, struct futhark_i32_1d *arr)
     free(arr);
     return 0;
 }
-int futhark_values_i32_1d(struct futhark_context *ctx, struct futhark_i32_1d *arr, int32_t *data)
+int futhark_values_f32_1d(struct futhark_context *ctx, struct futhark_f32_1d *arr, float *data)
 {
     int err = 0;
     
@@ -7836,7 +7121,7 @@ int futhark_values_i32_1d(struct futhark_context *ctx, struct futhark_i32_1d *ar
     lock_unlock(&ctx->lock);
     return err;
 }
-int futhark_index_i32_1d(struct futhark_context *ctx, int32_t *out, struct futhark_i32_1d *arr, int64_t i0)
+int futhark_index_f32_1d(struct futhark_context *ctx, float *out, struct futhark_f32_1d *arr, int64_t i0)
 {
     int err = 0;
     
@@ -7851,123 +7136,151 @@ int futhark_index_i32_1d(struct futhark_context *ctx, int32_t *out, struct futha
     }
     return err;
 }
-unsigned char *futhark_values_raw_i32_1d(struct futhark_context *ctx, struct futhark_i32_1d *arr)
+unsigned char *futhark_values_raw_f32_1d(struct futhark_context *ctx, struct futhark_f32_1d *arr)
 {
     (void) ctx;
     return arr->mem.mem;
 }
-const int64_t *futhark_shape_i32_1d(struct futhark_context *ctx, struct futhark_i32_1d *arr)
+const int64_t *futhark_shape_f32_1d(struct futhark_context *ctx, struct futhark_f32_1d *arr)
 {
     (void) ctx;
     return arr->shape;
 }
 
-FUTHARK_FUN_ATTR int futrts_entry_main(struct futhark_context *ctx, int32_t *out_prim_out_6248, struct memblock xs_mem_6242, int64_t dz2080U_5864)
+FUTHARK_FUN_ATTR int futrts_entry_main(struct futhark_context *ctx, struct memblock *mem_out_p_5576, struct memblock mat_inds_mem_5556, struct memblock mat_vals_mem_5557, struct memblock shp_mem_5558, struct memblock vct_mem_5559, int64_t n_5456, int64_t m_5457, int64_t dz2080U_5458)
 {
     (void) ctx;
     
     int err = 0;
-    int32_t prim_out_6243;
-    int32_t defunc_0_f_res_6229;
-    int32_t defunc_0_f_res_6231;
-    int32_t defunc_0_f_res_6232;
-    int32_t defunc_0_f_res_6234;
-    int32_t redout_6235;
-    int32_t redout_6237;
-    int32_t redout_6238;
-    int32_t redout_6240;
+    struct memblock mem_5561;
     
-    redout_6235 = 0;
-    redout_6237 = 0;
-    redout_6238 = 0;
-    redout_6240 = 0;
-    for (int64_t i_6241 = 0; i_6241 < dz2080U_5864; i_6241++) {
-        int32_t eta_p_6220 = ((int32_t *) xs_mem_6242.mem)[i_6241];
-        bool lifted_pred1_res_6223 = eta_p_6220 == 0;
-        int32_t bool_res_6224 = btoi_bool_i32(lifted_pred1_res_6223);
-        bool cond_6184 = redout_6240 == 0;
-        bool x_6186 = cond_6184 && lifted_pred1_res_6223;
-        int32_t new_lss_6187;
-        
-        if (x_6186) {
-            int32_t max_arg1_6188 = add32(bool_res_6224, redout_6237);
-            int32_t max_res_6189 = smax32(max_arg1_6188, bool_res_6224);
-            int32_t max_res_6190 = smax32(max_res_6189, redout_6235);
-            
-            new_lss_6187 = max_res_6190;
-        } else {
-            int32_t max_res_6191 = smax32(bool_res_6224, redout_6235);
-            
-            new_lss_6187 = max_res_6191;
-        }
-        
-        int32_t new_lcs_6200;
-        
-        if (x_6186) {
-            bool cond_6201 = redout_6237 == redout_6238;
-            bool cond_t_res_6202 = bool_res_6224 == 1;
-            bool x_6203 = cond_6201 && cond_t_res_6202;
-            int32_t new_lcs_t_res_6204;
-            
-            if (x_6203) {
-                int32_t new_lcs_t_res_t_res_6205 = add32(1, redout_6238);
-                
-                new_lcs_t_res_6204 = new_lcs_t_res_t_res_6205;
-            } else {
-                int32_t max_arg1_6206 = add32(1, redout_6237);
-                int32_t max_res_6207 = smax32(max_arg1_6206, bool_res_6224);
-                
-                new_lcs_t_res_6204 = max_res_6207;
-            }
-            new_lcs_6200 = new_lcs_t_res_6204;
-        } else {
-            new_lcs_6200 = bool_res_6224;
-        }
-        
-        int32_t new_len_6208 = add32(1, redout_6238);
-        int32_t redout_tmp_6244 = new_lss_6187;
-        int32_t redout_tmp_6245 = new_lcs_6200;
-        int32_t redout_tmp_6246 = new_len_6208;
-        int32_t redout_tmp_6247 = eta_p_6220;
-        
-        redout_6235 = redout_tmp_6244;
-        redout_6237 = redout_tmp_6245;
-        redout_6238 = redout_tmp_6246;
-        redout_6240 = redout_tmp_6247;
+    mem_5561.references = NULL;
+    
+    struct memblock mem_out_5571;
+    
+    mem_out_5571.references = NULL;
+    
+    int64_t bytes_5560 = (int64_t) 4 * m_5457;
+    
+    if (memblock_alloc(ctx, &mem_5561, bytes_5560, "mem_5561")) {
+        err = 1;
+        goto cleanup;
     }
-    defunc_0_f_res_6229 = redout_6235;
-    defunc_0_f_res_6231 = redout_6237;
-    defunc_0_f_res_6232 = redout_6238;
-    defunc_0_f_res_6234 = redout_6240;
-    prim_out_6243 = defunc_0_f_res_6229;
-    *out_prim_out_6248 = prim_out_6243;
+    for (int64_t nest_i_5572 = 0; nest_i_5572 < m_5457; nest_i_5572++) {
+        ((float *) mem_5561.mem)[nest_i_5572] = 0.0F;
+    }
+    
+    int64_t res_5532;
+    int64_t offset_5535 = (int64_t) 0;
+    
+    for (int64_t i_5533 = 0; i_5533 < m_5457; i_5533++) {
+        int64_t row_len_5536 = ((int64_t *) shp_mem_5558.mem)[i_5533];
+        float sum_5537;
+        float sum_5539 = 0.0F;
+        
+        for (int64_t j_5538 = 0; j_5538 < row_len_5536; j_5538++) {
+            int64_t zt_lhs_5540 = add64(offset_5535, j_5538);
+            bool x_5541 = sle64((int64_t) 0, zt_lhs_5540);
+            bool y_5542 = slt64(zt_lhs_5540, n_5456);
+            bool bounds_check_5543 = x_5541 && y_5542;
+            bool index_certs_5544;
+            
+            if (!bounds_check_5543) {
+                set_error(ctx, msgprintf("Error: %s%lld%s%lld%s\n\nBacktrace:\n%s", "Index [", (long long) zt_lhs_5540, "] out of bounds for array of shape [", (long long) n_5456, "].", "-> #0  spMVmult-seq.fut:25:15-31\n   #1  spMVmult-seq.fut:39:3-47\n   #2  spMVmult-seq.fut:33:1-39:47\n"));
+                err = FUTHARK_PROGRAM_ERROR;
+                goto cleanup;
+            }
+            
+            int64_t zt_rhs_5546 = ((int64_t *) mat_inds_mem_5556.mem)[zt_lhs_5540];
+            bool x_5547 = sle64((int64_t) 0, zt_rhs_5546);
+            bool y_5548 = slt64(zt_rhs_5546, dz2080U_5458);
+            bool bounds_check_5549 = x_5547 && y_5548;
+            bool index_certs_5550;
+            
+            if (!bounds_check_5549) {
+                set_error(ctx, msgprintf("Error: %s%lld%s%lld%s\n\nBacktrace:\n%s", "Index [", (long long) zt_rhs_5546, "] out of bounds for array of shape [", (long long) dz2080U_5458, "].", "-> #0  spMVmult-seq.fut:25:34-55\n   #1  spMVmult-seq.fut:39:3-47\n   #2  spMVmult-seq.fut:33:1-39:47\n"));
+                err = FUTHARK_PROGRAM_ERROR;
+                goto cleanup;
+            }
+            
+            float zt_lhs_5545 = ((float *) mat_vals_mem_5557.mem)[zt_lhs_5540];
+            float zt_rhs_5551 = ((float *) vct_mem_5559.mem)[zt_rhs_5546];
+            float zp_rhs_5552 = zt_lhs_5545 * zt_rhs_5551;
+            float loopres_5553 = sum_5539 + zp_rhs_5552;
+            float sum_tmp_5575 = loopres_5553;
+            
+            sum_5539 = sum_tmp_5575;
+        }
+        sum_5537 = sum_5539;
+        ((float *) mem_5561.mem)[i_5533] = sum_5537;
+        
+        int64_t offset_5555 = add64(offset_5535, row_len_5536);
+        int64_t offset_tmp_5574 = offset_5555;
+        
+        offset_5535 = offset_tmp_5574;
+    }
+    res_5532 = offset_5535;
+    if (memblock_set(ctx, &mem_out_5571, &mem_5561, "mem_5561") != 0)
+        return 1;
+    if (memblock_set(ctx, &*mem_out_p_5576, &mem_out_5571, "mem_out_5571") != 0)
+        return 1;
     
   cleanup:
-    { }
+    {
+        if (memblock_unref(ctx, &mem_5561, "mem_5561") != 0)
+            return 1;
+        if (memblock_unref(ctx, &mem_out_5571, "mem_out_5571") != 0)
+            return 1;
+    }
     return err;
 }
 
-int futhark_entry_main(struct futhark_context *ctx, int32_t *out0, const struct futhark_i32_1d *in0)
+int futhark_entry_main(struct futhark_context *ctx, struct futhark_f32_1d **out0, const struct futhark_i64_1d *in0, const struct futhark_f32_1d *in1, const struct futhark_i64_1d *in2, const struct futhark_f32_1d *in3)
 {
-    int64_t dz2080U_5864 = (int64_t) 0;
-    int32_t prim_out_6243 = 0;
+    int64_t n_5456 = (int64_t) 0;
+    int64_t m_5457 = (int64_t) 0;
+    int64_t dz2080U_5458 = (int64_t) 0;
     int ret = 0;
     
     lock_lock(&ctx->lock);
     
-    struct memblock xs_mem_6242;
+    struct memblock mem_out_5571;
     
-    xs_mem_6242.references = NULL;
-    xs_mem_6242 = in0->mem;
-    dz2080U_5864 = in0->shape[0];
-    if (!(dz2080U_5864 == in0->shape[0])) {
+    mem_out_5571.references = NULL;
+    
+    struct memblock vct_mem_5559;
+    
+    vct_mem_5559.references = NULL;
+    
+    struct memblock shp_mem_5558;
+    
+    shp_mem_5558.references = NULL;
+    
+    struct memblock mat_vals_mem_5557;
+    
+    mat_vals_mem_5557.references = NULL;
+    
+    struct memblock mat_inds_mem_5556;
+    
+    mat_inds_mem_5556.references = NULL;
+    mat_inds_mem_5556 = in0->mem;
+    n_5456 = in0->shape[0];
+    mat_vals_mem_5557 = in1->mem;
+    n_5456 = in1->shape[0];
+    shp_mem_5558 = in2->mem;
+    m_5457 = in2->shape[0];
+    vct_mem_5559 = in3->mem;
+    dz2080U_5458 = in3->shape[0];
+    if (!(n_5456 == in0->shape[0] && (n_5456 == in1->shape[0] && (m_5457 == in2->shape[0] && dz2080U_5458 == in3->shape[0])))) {
         ret = 1;
         set_error(ctx, msgprintf("Error: entry point arguments have invalid sizes.\n"));
     }
     if (ret == 0) {
-        ret = futrts_entry_main(ctx, &prim_out_6243, xs_mem_6242, dz2080U_5864);
+        ret = futrts_entry_main(ctx, &mem_out_5571, mat_inds_mem_5556, mat_vals_mem_5557, shp_mem_5558, vct_mem_5559, n_5456, m_5457, dz2080U_5458);
         if (ret == 0) {
-            *out0 = prim_out_6243;
+            assert((*out0 = (struct futhark_f32_1d *) malloc(sizeof(struct futhark_f32_1d))) != NULL);
+            (*out0)->mem = mem_out_5571;
+            (*out0)->shape[0] = m_5457;
         }
     }
     lock_unlock(&ctx->lock);

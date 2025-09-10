@@ -73,21 +73,14 @@ const char *futhark_get_tuning_param_name(int);
 const char *futhark_get_tuning_param_class(int);
 
 // Arrays
-struct futhark_i32_1d;
-struct futhark_i32_1d *futhark_new_i32_1d(struct futhark_context *ctx, const int32_t *data, int64_t dim0);
-struct futhark_i32_1d *futhark_new_raw_i32_1d(struct futhark_context *ctx, CUdeviceptr data, int64_t dim0);
-int futhark_free_i32_1d(struct futhark_context *ctx, struct futhark_i32_1d *arr);
-int futhark_values_i32_1d(struct futhark_context *ctx, struct futhark_i32_1d *arr, int32_t *data);
-int futhark_index_i32_1d(struct futhark_context *ctx, int32_t *out, struct futhark_i32_1d *arr, int64_t i0);
-CUdeviceptr futhark_values_raw_i32_1d(struct futhark_context *ctx, struct futhark_i32_1d *arr);
-const int64_t *futhark_shape_i32_1d(struct futhark_context *ctx, struct futhark_i32_1d *arr);
+
 
 // Opaque values
 
 
 
 // Entry points
-int futhark_entry_main(struct futhark_context *ctx, int32_t *out0, const struct futhark_i32_1d *in0);
+
 
 // Miscellaneous
 int futhark_context_sync(struct futhark_context *ctx);
@@ -2943,27 +2936,8 @@ static char* load_tuning_file(const char *fname,
 
 // End of tuning.h.
 
-const struct type type_ZMZNi32;
-void *futhark_new_i32_1d_wrap(struct futhark_context *ctx, const void *p, const int64_t *shape)
-{
-    return futhark_new_i32_1d(ctx, p, shape[0]);
-}
-const struct array_aux type_ZMZNi32_aux = {.name ="[]i32", .rank =1, .info =&i32_info, .new =(array_new_fn) futhark_new_i32_1d_wrap, .free =(array_free_fn) futhark_free_i32_1d, .shape =(array_shape_fn) futhark_shape_i32_1d, .values =(array_values_fn) futhark_values_i32_1d};
-const struct type type_ZMZNi32 = {.name ="[]i32", .restore =(restore_fn) restore_array, .store =(store_fn) store_array, .free =(free_fn) free_array, .aux =&type_ZMZNi32_aux};
-const struct type *main_out_types[] = {&type_i32, NULL};
-bool main_out_unique[] = {false};
-const struct type *main_in_types[] = {&type_ZMZNi32, NULL};
-bool main_in_unique[] = {false};
-const char *main_tuning_params[] = {"main.segred_num_tblocks_6180", "main.segred_tblock_size_6178", NULL};
-int call_main(struct futhark_context *ctx, void **outs, void **ins)
-{
-    int32_t *out0 = outs[0];
-    struct futhark_i32_1d * in0 = *(struct futhark_i32_1d * *) ins[0];
-    
-    return futhark_entry_main(ctx, out0, in0);
-}
-const struct type *types[] = {&type_i8, &type_i16, &type_i32, &type_i64, &type_u8, &type_u16, &type_u32, &type_u64, &type_f16, &type_f32, &type_f64, &type_bool, &type_ZMZNi32, NULL};
-struct entry_point entry_points[] = {{.name ="main", .f =call_main, .tuning_params =main_tuning_params, .in_types =main_in_types, .out_types =main_out_types, .in_unique =main_in_unique, .out_unique =main_out_unique}, {.name =NULL}};
+const struct type *types[] = {&type_i8, &type_i16, &type_i32, &type_i64, &type_u8, &type_u16, &type_u32, &type_u64, &type_f16, &type_f32, &type_f64, &type_bool, NULL};
+struct entry_point entry_points[] = {{.name =NULL}};
 struct futhark_prog prog = {.types =types, .entry_points =entry_points};
 int parse_options(struct futhark_context_config *cfg, int argc, char *const argv[])
 {
@@ -7169,19 +7143,15 @@ struct memblock {
 };
 struct constants {
     int dummy;
-    struct memblock_device counters_mem_6207;
 };
 struct tuning_params {
     int dummy;
-    int64_t *builtinzhreplicate_i32zitblock_sizze_6218;
-    int64_t *mainzisegred_num_tblocks_6180;
-    int64_t *mainzisegred_tblock_sizze_6178;
 };
-static const int num_tuning_params = 3;
-static const char *tuning_param_names[] = {"builtin#replicate_i32.tblock_size_6218", "main.segred_num_tblocks_6180", "main.segred_tblock_size_6178", NULL};
-static const char *tuning_param_vars[] = {"builtinzhreplicate_i32zitblock_sizze_6218", "mainzisegred_num_tblocks_6180", "mainzisegred_tblock_sizze_6178", NULL};
-static const char *tuning_param_classes[] = {"thread_block_size", "grid_size", "thread_block_size", NULL};
-static int64_t tuning_param_defaults[] = {0, 0, 0, 0};
+static const int num_tuning_params = 0;
+static const char *tuning_param_names[] = {NULL};
+static const char *tuning_param_vars[] = {NULL};
+static const char *tuning_param_classes[] = {NULL};
+static int64_t tuning_param_defaults[] = {0};
 static const int max_failure_args = 0;
 static const int f64_required = 0;
 static const char *gpu_program[] = {"#define FUTHARK_CUDA\n// start of prelude.cu\n\n#define SCALAR_FUN_ATTR __device__ static inline\n#define FUTHARK_FUN_ATTR __device__ static\n#define FUTHARK_F64_ENABLED\n\ntypedef char int8_t;\ntypedef short int16_t;\ntypedef int int32_t;\ntypedef long long int64_t;\ntypedef unsigned char uint8_t;\ntypedef unsigned short uint16_t;\ntypedef unsigned int uint32_t;\ntypedef unsigned long long uint64_t;\n\n#define __global\n#define __local\n#define __private\n#define __constant\n#define __write_only\n#define __read_only\n\nstatic inline __device__ int get_tblock_id(int d) {\n  switch (d) {\n  case 0: return blockIdx.x;\n  case 1: return blockIdx.y;\n  case 2: return blockIdx.z;\n  default: return 0;\n  }\n}\n\nstatic inline __device__ int get_num_tblocks(int d) {\n  switch(d) {\n  case 0: return gridDim.x;\n  case 1: return gridDim.y;\n  case 2: return gridDim.z;\n  default: return 0;\n  }\n}\n\nstatic inline __device__ int get_global_id(int d) {\n  switch (d) {\n    case 0: return threadIdx.x + blockIdx.x * blockDim.x;\n    case 1: return threadIdx.y + blockIdx.y * blockDim.y;\n    case 2: return threadIdx.z + blockIdx.z * blockDim.z;\n    default: return 0;\n  }\n}\n\nstatic inline __device__ int get_local_id(int d) {\n  switch (d) {\n    case 0: return threadIdx.x;\n    case 1: return threadIdx.y;\n    case 2: return threadIdx.z;\n    default: return 0;\n  }\n}\n\nstatic inline __device__ int get_local_size(int d) {\n  switch (d) {\n    case 0: return blockDim.x;\n    case 1: return blockDim.y;\n    case 2: return blockDim.z;\n    default: return 0;\n  }\n}\n\nstatic inline __device__ int get_global_size(int d) {\n  switch (d) {\n    case 0: return gridDim.x * blockDim.x;\n    case 1: return gridDim.y * blockDim.y;\n    case 2: return gridDim.z * blockDim.z;\n    default: return 0;\n  }\n}\n\n\n#define CLK_LOCAL_MEM_FENCE 1\n#define CLK_GLOBAL_MEM_FENCE 2\nstatic inline __device__ void barrier(int x) {\n  __syncthreads();\n}\nstatic inline __device__ void mem_fence_local() {\n  __threadfence_block();\n}\nstatic inline __device__ void mem_fence_global", "() {\n  __threadfence();\n}\n\nstatic inline __device__ void barrier_local() {\n  __syncthreads();\n}\n\n#define NAN (0.0/0.0)\n#define INFINITY (1.0/0.0)\nextern volatile __shared__ unsigned char shared_mem[];\n\n#define SHARED_MEM_PARAM\n#define FUTHARK_KERNEL extern \"C\" __global__ __launch_bounds__(MAX_THREADS_PER_BLOCK)\n#define FUTHARK_KERNEL_SIZED(a,b,c) extern \"C\" __global__ __launch_bounds__(a*b*c)\n\n// End of prelude.cu\n// Start of half.h.\n\n// Conversion functions are from http://half.sourceforge.net/, but\n// translated to C.\n//\n// Copyright (c) 2012-2021 Christian Rau\n//\n// Permission is hereby granted, free of charge, to any person obtaining a copy\n// of this software and associated documentation files (the \"Software\"), to deal\n// in the Software without restriction, including without limitation the rights\n// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\n// copies of the Software, and to permit persons to whom the Software is\n// furnished to do so, subject to the following conditions:\n//\n// The above copyright notice and this permission notice shall be included in\n// all copies or substantial portions of the Software.\n//\n// THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\n// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\n// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\n// THE SOFTWARE.\n\n#ifndef __OPENCL_VERSION__\n#define __constant\n#endif\n\n__constant static const uint16_t base_table[512] = {\n  0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,\n  0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0", "000, 0x0000,\n  0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,\n  0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,\n  0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,\n  0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,\n  0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0001, 0x0002, 0x0004, 0x0008, 0x0010, 0x0020, 0x0040, 0x0080, 0x0100,\n  0x0200, 0x0400, 0x0800, 0x0C00, 0x1000, 0x1400, 0x1800, 0x1C00, 0x2000, 0x2400, 0x2800, 0x2C00, 0x3000, 0x3400, 0x3800, 0x3C00,\n  0x4000, 0x4400, 0x4800, 0x4C00, 0x5000, 0x5400, 0x5800, 0x5C00, 0x6000, 0x6400, 0x6800, 0x6C00, 0x7000, 0x7400, 0x7800, 0x7C00,\n  0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00,\n  0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00,\n  0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00,\n  0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00,\n  0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00,\n  0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00,\n  0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00, 0x7C00,\n  0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000,\n  0x8000, 0x8000, 0x8000, 0x8000, 0x8",
@@ -7211,15 +7181,7 @@ static const char *gpu_program[] = {"#define FUTHARK_CUDA\n// start of prelude.c
                                     "                                               int32_t repeat_2) {     \\\n  __local ELEM_TYPE* block = (__local ELEM_TYPE*)shared_mem;            \\\n  int tblock_id_0 = get_tblock_id(0);                                   \\\n  int global_id_0 = get_global_id(0);                                   \\\n  int tblock_id_1 = get_tblock_id(1);                                   \\\n  int global_id_1 = get_global_id(1);                                   \\\n  for (int i1 = 0; i1 <= repeat_1; i1++) {                              \\\n    int tblock_id_2 = get_tblock_id(2);                                 \\\n    int global_id_2 = get_global_id(2);                                 \\\n    for (int i2 = 0; i2 <= repeat_2; i2++) {                            \\\n      int32_t our_array_offset = tblock_id_2 * x_elems * y_elems;       \\\n      int32_t odata_offset = dst_offset + our_array_offset;             \\\n      int32_t idata_offset = src_offset + our_array_offset;             \\\n      int32_t x_index =                                                 \\\n        tblock_id_0 * TR_BLOCK_DIM * mulx +                             \\\n        get_local_id(0) +                                               \\\n        get_local_id(1)%mulx * TR_BLOCK_DIM;                            \\\n      int32_t y_index = tblock_id_1 * TR_BLOCK_DIM + get_local_id(1)/mulx; \\\n      int32_t index_in = y_index * x_elems + x_index;                   \\\n      if (x_index < x_elems && y_index < y_elems) {                     \\\n        block[get_local_id(1) * (TR_BLOCK_DIM+1) + get_local_id(0)] =   \\\n          src_mem[idata_offset + index_in];                             \\\n      }                                                                 \\\n      barrier_local();                                                  \\\n      x_index = tblock_id_1 * TR_BLOCK_DIM + get_local_id(0)/mulx;      \\\n      y_index =                                                         \\\n        tblock_id_0 * TR_BLOCK_DIM * mulx +                             \\\n", "        get_local_id(1) +                                               \\\n        (get_local_id(0)%mulx) * TR_BLOCK_DIM;                          \\\n      int32_t index_out = y_index * y_elems + x_index;                  \\\n      if (x_index < y_elems && y_index < x_elems) {                     \\\n        dst_mem[odata_offset + index_out] =                             \\\n          block[get_local_id(0) * (TR_BLOCK_DIM+1) + get_local_id(1)];  \\\n      }                                                                 \\\n      tblock_id_2 += get_num_tblocks(2);                                \\\n      global_id_2 += get_global_size(2);                                \\\n    }                                                                   \\\n    tblock_id_1 += get_num_tblocks(1);                                  \\\n    global_id_1 += get_global_size(1);                                  \\\n  }                                                                     \\\n}                                                                       \\\n                                                                        \\\nFUTHARK_KERNEL_SIZED(TR_BLOCK_DIM, TR_BLOCK_DIM, 1)                     \\\nvoid map_transpose_##NAME##_low_width(SHARED_MEM_PARAM                  \\\n                                      __global ELEM_TYPE *dst_mem,      \\\n                                      int64_t dst_offset,               \\\n                                      __global ELEM_TYPE *src_mem,      \\\n                                      int64_t src_offset,               \\\n                                      int32_t num_arrays,               \\\n                                      int32_t x_elems,                  \\\n                                      int32_t y_elems,                  \\\n                                      int32_t mulx,                     \\\n                                      int32_t muly,                     \\\n                                      int32_t repeat_1,                 \\\n  ", "                                    int32_t repeat_2) {               \\\n  __local ELEM_TYPE* block = (__local ELEM_TYPE*)shared_mem;            \\\n  int tblock_id_0 = get_tblock_id(0);                                   \\\n  int global_id_0 = get_global_id(0);                                   \\\n  int tblock_id_1 = get_tblock_id(1);                                   \\\n  int global_id_1 = get_global_id(1);                                   \\\n  for (int i1 = 0; i1 <= repeat_1; i1++) {                              \\\n    int tblock_id_2 = get_tblock_id(2);                                 \\\n    int global_id_2 = get_global_id(2);                                 \\\n    for (int i2 = 0; i2 <= repeat_2; i2++) {                            \\\n      int32_t our_array_offset = tblock_id_2 * x_elems * y_elems;       \\\n      int32_t odata_offset = dst_offset + our_array_offset;             \\\n      int32_t idata_offset = src_offset + our_array_offset;             \\\n      int32_t x_index = tblock_id_0 * TR_BLOCK_DIM + get_local_id(0)/muly; \\\n      int32_t y_index =                                                 \\\n        tblock_id_1 * TR_BLOCK_DIM * muly +                             \\\n        get_local_id(1) + (get_local_id(0)%muly) * TR_BLOCK_DIM;        \\\n      int32_t index_in = y_index * x_elems + x_index;                   \\\n      if (x_index < x_elems && y_index < y_elems) {                     \\\n        block[get_local_id(1) * (TR_BLOCK_DIM+1) + get_local_id(0)] =   \\\n          src_mem[idata_offset + index_in];                             \\\n      }                                                                 \\\n      barrier_local();                                                  \\\n      x_index = tblock_id_1 * TR_BLOCK_DIM * muly +                     \\\n        get_local_id(0) + (get_local_id(1)%muly) * TR_BLOCK_DIM;        \\\n      y_index = tblock_id_0 * TR_BLOCK_DIM + get_local_id(1)/muly;      \\\n      int32_t index_out = y_index * y_elems + x_index;                  \\\n ",
                                     "     if (x_index < y_elems && y_index < x_elems) {                     \\\n        dst_mem[odata_offset + index_out] =                             \\\n          block[get_local_id(0) * (TR_BLOCK_DIM+1) + get_local_id(1)];  \\\n      }                                                                 \\\n      tblock_id_2 += get_num_tblocks(2);                                \\\n      global_id_2 += get_num_tblocks(2) * get_local_size(2);            \\\n    }                                                                   \\\n    tblock_id_1 += get_num_tblocks(1);                                  \\\n    global_id_1 += get_num_tblocks(1) * get_local_size(1);              \\\n  }                                                                     \\\n}                                                                       \\\n                                                                        \\\nFUTHARK_KERNEL_SIZED(TR_BLOCK_DIM*TR_BLOCK_DIM, 1, 1)                   \\\nvoid map_transpose_##NAME##_small(SHARED_MEM_PARAM                       \\\n                                  __global ELEM_TYPE *dst_mem,          \\\n                                  int64_t dst_offset,                   \\\n                                  __global ELEM_TYPE *src_mem,          \\\n                                  int64_t src_offset,                   \\\n                                  int32_t num_arrays,                   \\\n                                  int32_t x_elems,                      \\\n                                  int32_t y_elems,                      \\\n                                  int32_t mulx,                         \\\n                                  int32_t muly,                         \\\n                                  int32_t repeat_1,                     \\\n                                  int32_t repeat_2) {                   \\\n  (void)mulx; (void)muly;                                               \\\n  __local ELEM_TYPE* block = (__local ELEM_TYPE*)shared_mem;            \\\n  ", "int tblock_id_0 = get_tblock_id(0);                                   \\\n  int global_id_0 = get_global_id(0);                                   \\\n  int tblock_id_1 = get_tblock_id(1);                                   \\\n  int global_id_1 = get_global_id(1);                                   \\\n  for (int i1 = 0; i1 <= repeat_1; i1++) {                              \\\n    int tblock_id_2 = get_tblock_id(2);                                 \\\n    int global_id_2 = get_global_id(2);                                 \\\n    for (int i2 = 0; i2 <= repeat_2; i2++) {                            \\\n      int32_t our_array_offset = global_id_0/(y_elems * x_elems) * y_elems * x_elems; \\\n      int32_t x_index = (global_id_0 % (y_elems * x_elems))/y_elems;    \\\n      int32_t y_index = global_id_0%y_elems;                            \\\n      int32_t odata_offset = dst_offset + our_array_offset;             \\\n      int32_t idata_offset = src_offset + our_array_offset;             \\\n      int32_t index_in = y_index * x_elems + x_index;                   \\\n      int32_t index_out = x_index * y_elems + y_index;                  \\\n      if (global_id_0 < x_elems * y_elems * num_arrays) {               \\\n        dst_mem[odata_offset + index_out] = src_mem[idata_offset + index_in]; \\\n      }                                                                 \\\n      tblock_id_2 += get_num_tblocks(2);                                \\\n      global_id_2 += get_global_size(2);                                \\\n    }                                                                   \\\n    tblock_id_1 += get_num_tblocks(1);                                  \\\n    global_id_1 += get_global_size(1);                                  \\\n  }                                                                     \\\n}                                                                       \\\n                                                                        \\\nFUTHARK_KERNEL_SIZED(TR_BLOCK_DIM*2, TR_TILE_DIM/TR_ELEMS_", "PER_THREAD, 1)\\\nvoid map_transpose_##NAME##_large(SHARED_MEM_PARAM                      \\\n                                  __global ELEM_TYPE *dst_mem,          \\\n                                  int64_t dst_offset,                   \\\n                                  __global ELEM_TYPE *src_mem,          \\\n                                  int64_t src_offset,                   \\\n                                  int64_t num_arrays,                   \\\n                                  int64_t x_elems,                      \\\n                                  int64_t y_elems,                      \\\n                                  int64_t mulx,                         \\\n                                  int64_t muly,                         \\\n                                  int32_t repeat_1,                     \\\n                                  int32_t repeat_2) {                   \\\n  (void)mulx; (void)muly;                                               \\\n  __local ELEM_TYPE* block = (__local ELEM_TYPE*)shared_mem;             \\\n  int tblock_id_0 = get_tblock_id(0);                                   \\\n  int global_id_0 = get_global_id(0);                                   \\\n  int tblock_id_1 = get_tblock_id(1);                                   \\\n  int global_id_1 = get_global_id(1);                                   \\\n  for (int i1 = 0; i1 <= repeat_1; i1++) {                              \\\n    int tblock_id_2 = get_tblock_id(2);                                 \\\n    int global_id_2 = get_global_id(2);                                 \\\n    for (int i2 = 0; i2 <= repeat_2; i2++) {                            \\\n      int64_t our_array_offset = tblock_id_2 * x_elems * y_elems;       \\\n      int64_t odata_offset = dst_offset + our_array_offset;             \\\n      int64_t idata_offset = src_offset + our_array_offset;             \\\n      int64_t x_index = global_id_0;                                    \\\n      int64_t y_index = tblock_id_1 * TR_TILE_DIM + get_loc",
                                     "al_id(1);    \\\n      if (x_index < x_elems) {                                          \\\n        for (int64_t j = 0; j < TR_ELEMS_PER_THREAD; j++) {             \\\n          int64_t index_i = (y_index + j * (TR_TILE_DIM/TR_ELEMS_PER_THREAD)) * x_elems + x_index; \\\n          if (y_index + j * (TR_TILE_DIM/TR_ELEMS_PER_THREAD) < y_elems) { \\\n            block[(get_local_id(1) + j * (TR_TILE_DIM/TR_ELEMS_PER_THREAD)) * (TR_TILE_DIM+1) + \\\n                  get_local_id(0)] =                                    \\\n              src_mem[idata_offset + index_i];                          \\\n          }                                                             \\\n        }                                                               \\\n      }                                                                 \\\n      barrier_local();                                                  \\\n      x_index = tblock_id_1 * TR_TILE_DIM + get_local_id(0);            \\\n      y_index = tblock_id_0 * TR_TILE_DIM + get_local_id(1);            \\\n      if (x_index < y_elems) {                                          \\\n        for (int64_t j = 0; j < TR_ELEMS_PER_THREAD; j++) {             \\\n          int64_t index_out = (y_index + j * (TR_TILE_DIM/TR_ELEMS_PER_THREAD)) * y_elems + x_index; \\\n          if (y_index + j * (TR_TILE_DIM/TR_ELEMS_PER_THREAD) < x_elems) { \\\n            dst_mem[(odata_offset + index_out)] =                       \\\n              block[get_local_id(0) * (TR_TILE_DIM+1) +                 \\\n                    get_local_id(1) + j * (TR_TILE_DIM/TR_ELEMS_PER_THREAD)]; \\\n          }                                                             \\\n        }                                                               \\\n      }                                                                 \\\n      tblock_id_2 += get_num_tblocks(2);                                \\\n      global_id_2 += get_global_size(2);                                \\\n    }                                      ", "                             \\\n    tblock_id_1 += get_num_tblocks(1);                                  \\\n    global_id_1 += get_global_size(1);                                  \\\n  }                                                                     \\\n}                                                                       \\\n\nGEN_TRANSPOSE_KERNELS(1b, uint8_t)\nGEN_TRANSPOSE_KERNELS(2b, uint16_t)\nGEN_TRANSPOSE_KERNELS(4b, uint32_t)\nGEN_TRANSPOSE_KERNELS(8b, uint64_t)\n\n// End of transpose.cl\n// Start of copy.cl\n\n#define GEN_COPY_KERNEL(NAME, ELEM_TYPE) \\\nFUTHARK_KERNEL void lmad_copy_##NAME(SHARED_MEM_PARAM                   \\\n                               __global ELEM_TYPE *dst_mem,             \\\n                               int64_t dst_offset,                      \\\n                               __global ELEM_TYPE *src_mem,             \\\n                               int64_t src_offset,                      \\\n                               int64_t n,                               \\\n                               int r,                                   \\\n                               int64_t shape0, int64_t dst_stride0, int64_t src_stride0, \\\n                               int64_t shape1, int64_t dst_stride1, int64_t src_stride1, \\\n                               int64_t shape2, int64_t dst_stride2, int64_t src_stride2, \\\n                               int64_t shape3, int64_t dst_stride3, int64_t src_stride3, \\\n                               int64_t shape4, int64_t dst_stride4, int64_t src_stride4, \\\n                               int64_t shape5, int64_t dst_stride5, int64_t src_stride5, \\\n                               int64_t shape6, int64_t dst_stride6, int64_t src_stride6, \\\n                               int64_t shape7, int64_t dst_stride7, int64_t src_stride7) { \\\n  int64_t gtid = get_global_id(0);                                      \\\n  int64_t remainder = gtid;                                             \\\n                                             ", "                           \\\n  if (gtid >= n) {                                                      \\\n    return;                                                             \\\n  }                                                                     \\\n                                                                        \\\n  if (r > 0) {                                                          \\\n    int64_t i = remainder % shape0;                                     \\\n    dst_offset += i * dst_stride0;                                      \\\n    src_offset += i * src_stride0;                                      \\\n    remainder /= shape0;                                                \\\n  }                                                                     \\\n  if (r > 1) {                                                          \\\n    int64_t i = remainder % shape1;                                     \\\n    dst_offset += i * dst_stride1;                                      \\\n    src_offset += i * src_stride1;                                      \\\n    remainder /= shape1;                                                \\\n  }                                                                     \\\n  if (r > 2) {                                                          \\\n    int64_t i = remainder % shape2;                                     \\\n    dst_offset += i * dst_stride2;                                      \\\n    src_offset += i * src_stride2;                                      \\\n    remainder /= shape2;                                                \\\n  }                                                                     \\\n  if (r > 3) {                                                          \\\n    int64_t i = remainder % shape3;                                     \\\n    dst_offset += i * dst_stride3;                                      \\\n    src_offset += i * src_stride3;                                      \\\n    remainder /= shape3;                       ",
-                                    "                         \\\n  }                                                                     \\\n  if (r > 4) {                                                          \\\n    int64_t i = remainder % shape4;                                     \\\n    dst_offset += i * dst_stride4;                                      \\\n    src_offset += i * src_stride4;                                      \\\n    remainder /= shape4;                                                \\\n  }                                                                     \\\n  if (r > 5) {                                                          \\\n    int64_t i = remainder % shape5;                                     \\\n    dst_offset += i * dst_stride5;                                      \\\n    src_offset += i * src_stride5;                                      \\\n    remainder /= shape5;                                                \\\n  }                                                                     \\\n  if (r > 6) {                                                          \\\n    int64_t i = remainder % shape6;                                     \\\n    dst_offset += i * dst_stride6;                                      \\\n    src_offset += i * src_stride6;                                      \\\n    remainder /= shape6;                                                \\\n  }                                                                     \\\n  if (r > 7) {                                                          \\\n    int64_t i = remainder % shape7;                                     \\\n    dst_offset += i * dst_stride7;                                      \\\n    src_offset += i * src_stride7;                                      \\\n    remainder /= shape7;                                                \\\n  }                                                                     \\\n                                                                        \\\n  dst_mem[dst_offset] = src_mem[src_offset];     ", "                       \\\n}\n\nGEN_COPY_KERNEL(1b, uint8_t)\nGEN_COPY_KERNEL(2b, uint16_t)\nGEN_COPY_KERNEL(4b, uint32_t)\nGEN_COPY_KERNEL(8b, uint64_t)\n\n// End of copy.cl\n\n\n\nFUTHARK_KERNEL\nvoid builtinzhreplicate_i32zireplicate_6214(int64_t num_elems_6210, int32_t val_6211, int64_t replicate_n_6213, int64_t virt_num_tblocks_6219, int64_t num_tblocks_6220, __global unsigned char *mem_6209)\n{\n    int32_t replicate_ltid_6215;\n    int32_t tblock_sizze_6217;\n    int32_t replicate_gid_6216;\n    int32_t replicate_gtid_6214;\n    int32_t phys_tblock_id_6221;\n    int32_t iterations_6222;\n    \n    replicate_ltid_6215 = get_local_id(0);\n    tblock_sizze_6217 = get_local_size(0);\n    replicate_gid_6216 = get_tblock_id(0);\n    replicate_gtid_6214 = replicate_gid_6216 * tblock_sizze_6217 + replicate_ltid_6215;\n    phys_tblock_id_6221 = get_tblock_id(0);\n    iterations_6222 = sdiv_up32(sext_i64_i32(virt_num_tblocks_6219) - phys_tblock_id_6221, sext_i64_i32(num_tblocks_6220));\n    for (int32_t i_6223 = 0; i_6223 < iterations_6222; i_6223++) {\n        int32_t virt_tblock_id_6224;\n        int64_t global_tid_6225;\n        int64_t slice_6227;\n        int64_t rep_i_6226;\n        int64_t remnant_6228;\n        \n        virt_tblock_id_6224 = phys_tblock_id_6221 + i_6223 * sext_i64_i32(num_tblocks_6220);\n        global_tid_6225 = sext_i32_i64(virt_tblock_id_6224) * sext_i32_i64(tblock_sizze_6217) + sext_i32_i64(replicate_ltid_6215);\n        slice_6227 = num_elems_6210;\n        rep_i_6226 = global_tid_6225;\n        remnant_6228 = global_tid_6225 - rep_i_6226;\n        if (slt64(global_tid_6225, replicate_n_6213)) {\n            ((__global int32_t *) mem_6209)[rep_i_6226] = val_6211;\n        }\n        barrier(CLK_GLOBAL_MEM_FENCE | CLK_LOCAL_MEM_FENCE);\n    }\n    \n  error_1:\n    return;\n}\nFUTHARK_KERNEL_SIZED(mainzisegred_nonseg_6191_dim1, 1, 1)\nvoid mainzisegred_nonseg_6191(__global int *global_failure, int64_t dz2080U_5846, int64_t num_tblocks_6181, __global unsigned char *xs_mem_6192, __global uns", "igned char *mem_6194, __global unsigned char *mem_6195, __global unsigned char *mem_6196, __global unsigned char *mem_6197, __global unsigned char *mem_6198, __global unsigned char *mem_6199, __global unsigned char *counters_mem_6207, __global unsigned char *segred_tmp_mem_6229, __global unsigned char *segred_tmp_mem_6231, __global unsigned char *segred_tmp_mem_6233, __global unsigned char *segred_tmp_mem_6235, __global unsigned char *segred_tmp_mem_6237, __global unsigned char *segred_tmp_mem_6239)\n{\n    #define segred_tblock_sizze_6179 (mainzisegred_nonseg_6191zisegred_tblock_sizze_6179)\n    #define chunk_sizze_6206 (mainzisegred_nonseg_6191zichunk_sizze_6206)\n    \n    volatile __local unsigned char *sync_arr_mem_6279_backing_1 = &shared_mem[0];\n    const int64_t sync_arr_mem_6279_backing_1_offset = 0 + 8;\n    volatile __local unsigned char *local_mem_6254_backing_0 = &shared_mem[sync_arr_mem_6279_backing_1_offset];\n    const int64_t local_mem_6254_backing_0_offset = sync_arr_mem_6279_backing_1_offset + (smax64(segred_tblock_sizze_6179 * chunk_sizze_6206 * (int64_t) 4, sdiv_up64(sdiv_up64(sdiv_up64(sdiv_up64(sdiv_up64(segred_tblock_sizze_6179 * (int64_t) 4, (int64_t) 4) * (int64_t) 4 + segred_tblock_sizze_6179 * (int64_t) 4, (int64_t) 4) * (int64_t) 4 + segred_tblock_sizze_6179 * (int64_t) 4, (int64_t) 4) * (int64_t) 4 + segred_tblock_sizze_6179 * (int64_t) 4, (int64_t) 4) * (int64_t) 4 + segred_tblock_sizze_6179 * (int64_t) 4, (int64_t) 4) * (int64_t) 4 + segred_tblock_sizze_6179 * (int64_t) 4) + srem64((int64_t) 8 - srem64(smax64(segred_tblock_sizze_6179 * chunk_sizze_6206 * (int64_t) 4, sdiv_up64(sdiv_up64(sdiv_up64(sdiv_up64(sdiv_up64(segred_tblock_sizze_6179 * (int64_t) 4, (int64_t) 4) * (int64_t) 4 + segred_tblock_sizze_6179 * (int64_t) 4, (int64_t) 4) * (int64_t) 4 + segred_tblock_sizze_6179 * (int64_t) 4, (int64_t) 4) * (int64_t) 4 + segred_tblock_sizze_6179 * (int64_t) 4, (int64_t) 4) * (int64_t) 4 + segred_tblock_sizze_6179 * (int64_t) 4, (int64_t) 4) * ",
-                                    "(int64_t) 4 + segred_tblock_sizze_6179 * (int64_t) 4), (int64_t) 8), (int64_t) 8));\n    \n    if (*global_failure >= 0)\n        return;\n    \n    int32_t local_tid_6243;\n    int32_t tblock_sizze_6246;\n    int32_t wave_sizze_6245;\n    int32_t block_id_6244;\n    int32_t global_tid_6242;\n    int64_t phys_tid_6191;\n    int64_t block_worksizze_6247;\n    int64_t offset_6248;\n    int64_t offset_6249;\n    int64_t offset_6250;\n    int64_t offset_6251;\n    int64_t offset_6252;\n    int64_t offset_6253;\n    __local unsigned char *local_mem_6254;\n    int32_t chunk_i32_mem_6257[chunk_sizze_6206];\n    int32_t chunk_i32_mem_6261[chunk_sizze_6206];\n    int32_t chunk_i32_mem_6265[chunk_sizze_6206];\n    int32_t chunk_i32_mem_6269[chunk_sizze_6206];\n    int32_t chunk_i32_mem_6273[chunk_sizze_6206];\n    int32_t chunk_i32_mem_6277[chunk_sizze_6206];\n    __local unsigned char *sync_arr_mem_6279;\n    int64_t dummy_6189;\n    int64_t gtid_6190;\n    int64_t q_6281;\n    int32_t eta_p_block_res_acc_6282;\n    int32_t eta_p_block_res_acc_6283;\n    int32_t eta_p_block_res_acc_6284;\n    int32_t eta_p_block_res_acc_6285;\n    int32_t eta_p_block_res_acc_6286;\n    int32_t eta_p_block_res_acc_6287;\n    int32_t eta_p_6128;\n    int32_t eta_p_6129;\n    int32_t eta_p_6130;\n    int32_t eta_p_6131;\n    int32_t eta_p_6132;\n    int32_t eta_p_6133;\n    int32_t eta_p_6134;\n    int32_t eta_p_6135;\n    int32_t eta_p_6136;\n    int32_t eta_p_6137;\n    int32_t eta_p_6138;\n    int32_t eta_p_6139;\n    int64_t block_offset_in_segment_6325;\n    int64_t block_stride_6326;\n    int64_t block_base_offset_6327;\n    int32_t old_counter_6371;\n    bool is_last_block_6372;\n    \n    local_tid_6243 = get_local_id(0);\n    tblock_sizze_6246 = get_local_size(0);\n    wave_sizze_6245 = LOCKSTEP_WIDTH;\n    block_id_6244 = get_tblock_id(0);\n    global_tid_6242 = block_id_6244 * tblock_sizze_6246 + local_tid_6243;\n    phys_tid_6191 = sext_i32_i64(global_tid_6242);\n    block_worksizze_6247 = segred_tblock_sizze_6179 * chunk_sizze_6206;\n    of", "fset_6248 = segred_tblock_sizze_6179 * (int64_t) 4;\n    offset_6249 = sdiv_up64(offset_6248, (int64_t) 4) * (int64_t) 4 + segred_tblock_sizze_6179 * (int64_t) 4;\n    offset_6250 = sdiv_up64(offset_6249, (int64_t) 4) * (int64_t) 4 + segred_tblock_sizze_6179 * (int64_t) 4;\n    offset_6251 = sdiv_up64(offset_6250, (int64_t) 4) * (int64_t) 4 + segred_tblock_sizze_6179 * (int64_t) 4;\n    offset_6252 = sdiv_up64(offset_6251, (int64_t) 4) * (int64_t) 4 + segred_tblock_sizze_6179 * (int64_t) 4;\n    offset_6253 = sdiv_up64(offset_6252, (int64_t) 4) * (int64_t) 4 + segred_tblock_sizze_6179 * (int64_t) 4;\n    local_mem_6254 = (__local unsigned char *) local_mem_6254_backing_0;\n    sync_arr_mem_6279 = (__local unsigned char *) sync_arr_mem_6279_backing_1;\n    dummy_6189 = (int64_t) 0;\n    gtid_6190 = (int64_t) 0;\n    q_6281 = sdiv_up64(dz2080U_5846, sext_i32_i64(sext_i64_i32(segred_tblock_sizze_6179 * num_tblocks_6181)) * chunk_sizze_6206);\n    // ne-initialise the outer (per-block) accumulator(s)\n    {\n        eta_p_block_res_acc_6282 = 0;\n        eta_p_block_res_acc_6283 = 0;\n        eta_p_block_res_acc_6284 = 0;\n        eta_p_block_res_acc_6285 = 0;\n        eta_p_block_res_acc_6286 = 0;\n        eta_p_block_res_acc_6287 = 0;\n    }\n    block_offset_in_segment_6325 = squot64(phys_tid_6191, segred_tblock_sizze_6179);\n    block_stride_6326 = segred_tblock_sizze_6179 * chunk_sizze_6206;\n    block_base_offset_6327 = block_offset_in_segment_6325 * q_6281 * block_stride_6326;\n    for (int64_t i_6328 = 0; i_6328 < q_6281; i_6328++) {\n        int64_t block_offset_6329;\n        int32_t offset_6369;\n        int32_t skip_waves_6370;\n        int32_t eta_p_6288;\n        int32_t eta_p_6289;\n        int32_t eta_p_6290;\n        int32_t eta_p_6291;\n        int32_t eta_p_6292;\n        int32_t eta_p_6293;\n        int32_t eta_p_6294;\n        int32_t eta_p_6295;\n        int32_t eta_p_6296;\n        int32_t eta_p_6297;\n        int32_t eta_p_6298;\n        int32_t eta_p_6299;\n        \n        block_off", "set_6329 = block_base_offset_6327 + i_6328 * block_stride_6326;\n        for (int64_t k_6330 = 0; k_6330 < chunk_sizze_6206; k_6330++) {\n            int64_t loc_ind_6331 = k_6330 * segred_tblock_sizze_6179 + sext_i32_i64(local_tid_6243);\n            \n            gtid_6190 = block_offset_6329 + loc_ind_6331;\n            if (slt64(gtid_6190, dz2080U_5846)) {\n                // apply map function\n                {\n                    int32_t x_6169 = ((__global int32_t *) xs_mem_6192)[gtid_6190];\n                    \n                    // write map result(s) to private chunk(s)\n                    {\n                        chunk_i32_mem_6257[k_6330] = 1;\n                        chunk_i32_mem_6261[k_6330] = 1;\n                        chunk_i32_mem_6265[k_6330] = 1;\n                        chunk_i32_mem_6269[k_6330] = 1;\n                        chunk_i32_mem_6273[k_6330] = x_6169;\n                        chunk_i32_mem_6277[k_6330] = x_6169;\n                    }\n                }\n            } else {\n                chunk_i32_mem_6257[k_6330] = 0;\n                chunk_i32_mem_6261[k_6330] = 0;\n                chunk_i32_mem_6265[k_6330] = 0;\n                chunk_i32_mem_6269[k_6330] = 0;\n                chunk_i32_mem_6273[k_6330] = 0;\n                chunk_i32_mem_6277[k_6330] = 0;\n            }\n        }\n        barrier(CLK_LOCAL_MEM_FENCE);\n        // effectualize collective copies in shared memory\n        {\n            for (int64_t k_6332 = 0; k_6332 < chunk_sizze_6206; k_6332++) {\n                int64_t lmem_idx_6333 = sext_i32_i64(local_tid_6243) + k_6332 * segred_tblock_sizze_6179;\n                int32_t tmp_6334 = chunk_i32_mem_6257[k_6332];\n                \n                ((__local int32_t *) local_mem_6254)[lmem_idx_6333] = tmp_6334;\n            }\n            barrier(CLK_LOCAL_MEM_FENCE);\n            for (int64_t k_6335 = 0; k_6335 < chunk_sizze_6206; k_6335++) {\n                int64_t lmem_idx_6336 = sext_i32_i64(local_tid_6243) * chunk_sizze_6206 + k_6335",
-                                    ";\n                int32_t tmp_6337 = ((__local int32_t *) local_mem_6254)[lmem_idx_6336];\n                \n                chunk_i32_mem_6257[k_6335] = tmp_6337;\n            }\n            barrier(CLK_LOCAL_MEM_FENCE);\n            for (int64_t k_6338 = 0; k_6338 < chunk_sizze_6206; k_6338++) {\n                int64_t lmem_idx_6339 = sext_i32_i64(local_tid_6243) + k_6338 * segred_tblock_sizze_6179;\n                int32_t tmp_6340 = chunk_i32_mem_6261[k_6338];\n                \n                ((__local int32_t *) local_mem_6254)[lmem_idx_6339] = tmp_6340;\n            }\n            barrier(CLK_LOCAL_MEM_FENCE);\n            for (int64_t k_6341 = 0; k_6341 < chunk_sizze_6206; k_6341++) {\n                int64_t lmem_idx_6342 = sext_i32_i64(local_tid_6243) * chunk_sizze_6206 + k_6341;\n                int32_t tmp_6343 = ((__local int32_t *) local_mem_6254)[lmem_idx_6342];\n                \n                chunk_i32_mem_6261[k_6341] = tmp_6343;\n            }\n            barrier(CLK_LOCAL_MEM_FENCE);\n            for (int64_t k_6344 = 0; k_6344 < chunk_sizze_6206; k_6344++) {\n                int64_t lmem_idx_6345 = sext_i32_i64(local_tid_6243) + k_6344 * segred_tblock_sizze_6179;\n                int32_t tmp_6346 = chunk_i32_mem_6265[k_6344];\n                \n                ((__local int32_t *) local_mem_6254)[lmem_idx_6345] = tmp_6346;\n            }\n            barrier(CLK_LOCAL_MEM_FENCE);\n            for (int64_t k_6347 = 0; k_6347 < chunk_sizze_6206; k_6347++) {\n                int64_t lmem_idx_6348 = sext_i32_i64(local_tid_6243) * chunk_sizze_6206 + k_6347;\n                int32_t tmp_6349 = ((__local int32_t *) local_mem_6254)[lmem_idx_6348];\n                \n                chunk_i32_mem_6265[k_6347] = tmp_6349;\n            }\n            barrier(CLK_LOCAL_MEM_FENCE);\n            for (int64_t k_6350 = 0; k_6350 < chunk_sizze_6206; k_6350++) {\n                int64_t lmem_idx_6351 = sext_i32_i64(local_tid_6243) + k_6350 * segred_tblock_sizze_6179;\n                int32_t ", "tmp_6352 = chunk_i32_mem_6269[k_6350];\n                \n                ((__local int32_t *) local_mem_6254)[lmem_idx_6351] = tmp_6352;\n            }\n            barrier(CLK_LOCAL_MEM_FENCE);\n            for (int64_t k_6353 = 0; k_6353 < chunk_sizze_6206; k_6353++) {\n                int64_t lmem_idx_6354 = sext_i32_i64(local_tid_6243) * chunk_sizze_6206 + k_6353;\n                int32_t tmp_6355 = ((__local int32_t *) local_mem_6254)[lmem_idx_6354];\n                \n                chunk_i32_mem_6269[k_6353] = tmp_6355;\n            }\n            barrier(CLK_LOCAL_MEM_FENCE);\n            for (int64_t k_6356 = 0; k_6356 < chunk_sizze_6206; k_6356++) {\n                int64_t lmem_idx_6357 = sext_i32_i64(local_tid_6243) + k_6356 * segred_tblock_sizze_6179;\n                int32_t tmp_6358 = chunk_i32_mem_6273[k_6356];\n                \n                ((__local int32_t *) local_mem_6254)[lmem_idx_6357] = tmp_6358;\n            }\n            barrier(CLK_LOCAL_MEM_FENCE);\n            for (int64_t k_6359 = 0; k_6359 < chunk_sizze_6206; k_6359++) {\n                int64_t lmem_idx_6360 = sext_i32_i64(local_tid_6243) * chunk_sizze_6206 + k_6359;\n                int32_t tmp_6361 = ((__local int32_t *) local_mem_6254)[lmem_idx_6360];\n                \n                chunk_i32_mem_6273[k_6359] = tmp_6361;\n            }\n            barrier(CLK_LOCAL_MEM_FENCE);\n            for (int64_t k_6362 = 0; k_6362 < chunk_sizze_6206; k_6362++) {\n                int64_t lmem_idx_6363 = sext_i32_i64(local_tid_6243) + k_6362 * segred_tblock_sizze_6179;\n                int32_t tmp_6364 = chunk_i32_mem_6277[k_6362];\n                \n                ((__local int32_t *) local_mem_6254)[lmem_idx_6363] = tmp_6364;\n            }\n            barrier(CLK_LOCAL_MEM_FENCE);\n            for (int64_t k_6365 = 0; k_6365 < chunk_sizze_6206; k_6365++) {\n                int64_t lmem_idx_6366 = sext_i32_i64(local_tid_6243) * chunk_sizze_6206 + k_6365;\n                int32_t tmp_6367 = ((__local int32_t *) lo", "cal_mem_6254)[lmem_idx_6366];\n                \n                chunk_i32_mem_6277[k_6365] = tmp_6367;\n            }\n            barrier(CLK_LOCAL_MEM_FENCE);\n        }\n        // per-thread sequential reduction of private chunk(s)\n        {\n            for (int64_t k_6368 = 0; k_6368 < chunk_sizze_6206; k_6368++) {\n                // load params for all reductions\n                {\n                    eta_p_6128 = eta_p_block_res_acc_6282;\n                    eta_p_6134 = chunk_i32_mem_6257[k_6368];\n                    eta_p_6129 = eta_p_block_res_acc_6283;\n                    eta_p_6135 = chunk_i32_mem_6261[k_6368];\n                    eta_p_6130 = eta_p_block_res_acc_6284;\n                    eta_p_6136 = chunk_i32_mem_6265[k_6368];\n                    eta_p_6131 = eta_p_block_res_acc_6285;\n                    eta_p_6137 = chunk_i32_mem_6269[k_6368];\n                    eta_p_6132 = eta_p_block_res_acc_6286;\n                    eta_p_6138 = chunk_i32_mem_6273[k_6368];\n                    eta_p_6133 = eta_p_block_res_acc_6287;\n                    eta_p_6139 = chunk_i32_mem_6277[k_6368];\n                }\n                // apply reduction operator(s)\n                {\n                    bool cond_6140 = eta_p_6131 == 0;\n                    bool cond_f_res_6141 = eta_p_6137 == 0;\n                    bool x_6142 = !cond_6140;\n                    bool y_6143 = cond_f_res_6141 && x_6142;\n                    bool cond_6144 = cond_6140 || y_6143;\n                    bool lifted_pred2_res_6145 = sle32(eta_p_6133, eta_p_6138);\n                    bool x_6146 = !cond_6144;\n                    bool y_6147 = lifted_pred2_res_6145 && x_6146;\n                    bool segments_connect_6148 = cond_6144 || y_6147;\n                    int32_t new_lss_6149;\n                    \n                    if (segments_connect_6148) {\n                        int32_t max_arg1_6150 = add32(eta_p_6130, eta_p_6135);\n                        int32_t max_res_6151 = smax32(eta_p_6134, max_arg1_6150",
-                                    ");\n                        int32_t max_res_6152 = smax32(eta_p_6128, max_res_6151);\n                        \n                        new_lss_6149 = max_res_6152;\n                    } else {\n                        int32_t max_res_6153 = smax32(eta_p_6128, eta_p_6134);\n                        \n                        new_lss_6149 = max_res_6153;\n                    }\n                    \n                    bool cond_t_res_6154 = eta_p_6129 == eta_p_6131;\n                    bool x_6155 = segments_connect_6148 && cond_t_res_6154;\n                    int32_t new_lis_6156;\n                    \n                    if (x_6155) {\n                        int32_t new_lis_t_res_6157 = add32(eta_p_6131, eta_p_6135);\n                        \n                        new_lis_6156 = new_lis_t_res_6157;\n                    } else {\n                        new_lis_6156 = eta_p_6129;\n                    }\n                    \n                    bool cond_t_res_6158 = eta_p_6136 == eta_p_6137;\n                    bool x_6159 = segments_connect_6148 && cond_t_res_6158;\n                    int32_t new_lcs_6160;\n                    \n                    if (x_6159) {\n                        int32_t new_lcs_t_res_6161 = add32(eta_p_6130, eta_p_6137);\n                        \n                        new_lcs_6160 = new_lcs_t_res_6161;\n                    } else {\n                        new_lcs_6160 = eta_p_6136;\n                    }\n                    \n                    int32_t new_len_6162 = add32(eta_p_6131, eta_p_6137);\n                    int32_t new_first_6163;\n                    \n                    if (cond_6140) {\n                        new_first_6163 = eta_p_6138;\n                    } else {\n                        new_first_6163 = eta_p_6132;\n                    }\n                    \n                    int32_t new_last_6164;\n                    \n                    if (cond_f_res_6141) {\n                        new_last_6164 = eta_p_6133;\n                    } else {\n ", "                       new_last_6164 = eta_p_6139;\n                    }\n                    eta_p_block_res_acc_6282 = new_lss_6149;\n                    eta_p_block_res_acc_6283 = new_lis_6156;\n                    eta_p_block_res_acc_6284 = new_lcs_6160;\n                    eta_p_block_res_acc_6285 = new_len_6162;\n                    eta_p_block_res_acc_6286 = new_first_6163;\n                    eta_p_block_res_acc_6287 = new_last_6164;\n                }\n            }\n        }\n        // store accs. prims go in lmem; non-prims in params (in global mem)\n        {\n            ((__local int32_t *) local_mem_6254)[sext_i32_i64(local_tid_6243)] = eta_p_block_res_acc_6282;\n            ((__local int32_t *) local_mem_6254)[squot64(offset_6248, (int64_t) 4) + sext_i32_i64(local_tid_6243)] = eta_p_block_res_acc_6283;\n            ((__local int32_t *) local_mem_6254)[squot64(offset_6249, (int64_t) 4) + sext_i32_i64(local_tid_6243)] = eta_p_block_res_acc_6284;\n            ((__local int32_t *) local_mem_6254)[squot64(offset_6250, (int64_t) 4) + sext_i32_i64(local_tid_6243)] = eta_p_block_res_acc_6285;\n            ((__local int32_t *) local_mem_6254)[squot64(offset_6251, (int64_t) 4) + sext_i32_i64(local_tid_6243)] = eta_p_block_res_acc_6286;\n            ((__local int32_t *) local_mem_6254)[squot64(offset_6252, (int64_t) 4) + sext_i32_i64(local_tid_6243)] = eta_p_block_res_acc_6287;\n        }\n        barrier(CLK_LOCAL_MEM_FENCE);\n        skip_waves_6370 = 1;\n        offset_6369 = 0;\n        // participating threads read initial accumulator\n        {\n            if (slt32(local_tid_6243, sext_i64_i32(segred_tblock_sizze_6179))) {\n                eta_p_6288 = ((__local int32_t *) local_mem_6254)[sext_i32_i64(local_tid_6243 + offset_6369)];\n                eta_p_6289 = ((__local int32_t *) local_mem_6254)[squot64(offset_6248, (int64_t) 4) + sext_i32_i64(local_tid_6243 + offset_6369)];\n                eta_p_6290 = ((__local int32_t *) local_mem_6254)[squot64(offset_6249, (int64_t) 4", ") + sext_i32_i64(local_tid_6243 + offset_6369)];\n                eta_p_6291 = ((__local int32_t *) local_mem_6254)[squot64(offset_6250, (int64_t) 4) + sext_i32_i64(local_tid_6243 + offset_6369)];\n                eta_p_6292 = ((__local int32_t *) local_mem_6254)[squot64(offset_6251, (int64_t) 4) + sext_i32_i64(local_tid_6243 + offset_6369)];\n                eta_p_6293 = ((__local int32_t *) local_mem_6254)[squot64(offset_6252, (int64_t) 4) + sext_i32_i64(local_tid_6243 + offset_6369)];\n            }\n        }\n        offset_6369 = 1;\n        while (slt32(offset_6369, wave_sizze_6245)) {\n            if (slt32(local_tid_6243 + offset_6369, sext_i64_i32(segred_tblock_sizze_6179)) && ((local_tid_6243 - squot32(local_tid_6243, wave_sizze_6245) * wave_sizze_6245) & (2 * offset_6369 - 1)) == 0) {\n                // read array element\n                {\n                    eta_p_6294 = ((volatile __local int32_t *) local_mem_6254)[sext_i32_i64(local_tid_6243 + offset_6369)];\n                    eta_p_6295 = ((volatile __local int32_t *) local_mem_6254)[squot64(offset_6248, (int64_t) 4) + sext_i32_i64(local_tid_6243 + offset_6369)];\n                    eta_p_6296 = ((volatile __local int32_t *) local_mem_6254)[squot64(offset_6249, (int64_t) 4) + sext_i32_i64(local_tid_6243 + offset_6369)];\n                    eta_p_6297 = ((volatile __local int32_t *) local_mem_6254)[squot64(offset_6250, (int64_t) 4) + sext_i32_i64(local_tid_6243 + offset_6369)];\n                    eta_p_6298 = ((volatile __local int32_t *) local_mem_6254)[squot64(offset_6251, (int64_t) 4) + sext_i32_i64(local_tid_6243 + offset_6369)];\n                    eta_p_6299 = ((volatile __local int32_t *) local_mem_6254)[squot64(offset_6252, (int64_t) 4) + sext_i32_i64(local_tid_6243 + offset_6369)];\n                }\n                // apply reduction operation\n                {\n                    bool cond_6300 = eta_p_6291 == 0;\n                    bool cond_f_res_6301 = eta_p_6297 == 0;\n                    bool ",
-                                    "x_6302 = !cond_6300;\n                    bool y_6303 = cond_f_res_6301 && x_6302;\n                    bool cond_6304 = cond_6300 || y_6303;\n                    bool lifted_pred2_res_6305 = sle32(eta_p_6293, eta_p_6298);\n                    bool x_6306 = !cond_6304;\n                    bool y_6307 = lifted_pred2_res_6305 && x_6306;\n                    bool segments_connect_6308 = cond_6304 || y_6307;\n                    int32_t new_lss_6309;\n                    \n                    if (segments_connect_6308) {\n                        int32_t max_arg1_6310 = add32(eta_p_6290, eta_p_6295);\n                        int32_t max_res_6311 = smax32(eta_p_6294, max_arg1_6310);\n                        int32_t max_res_6312 = smax32(eta_p_6288, max_res_6311);\n                        \n                        new_lss_6309 = max_res_6312;\n                    } else {\n                        int32_t max_res_6313 = smax32(eta_p_6288, eta_p_6294);\n                        \n                        new_lss_6309 = max_res_6313;\n                    }\n                    \n                    bool cond_t_res_6314 = eta_p_6289 == eta_p_6291;\n                    bool x_6315 = segments_connect_6308 && cond_t_res_6314;\n                    int32_t new_lis_6316;\n                    \n                    if (x_6315) {\n                        int32_t new_lis_t_res_6317 = add32(eta_p_6291, eta_p_6295);\n                        \n                        new_lis_6316 = new_lis_t_res_6317;\n                    } else {\n                        new_lis_6316 = eta_p_6289;\n                    }\n                    \n                    bool cond_t_res_6318 = eta_p_6296 == eta_p_6297;\n                    bool x_6319 = segments_connect_6308 && cond_t_res_6318;\n                    int32_t new_lcs_6320;\n                    \n                    if (x_6319) {\n                        int32_t new_lcs_t_res_6321 = add32(eta_p_6290, eta_p_6297);\n                        \n                        new_lcs_6320 = new_lcs_t_res", "_6321;\n                    } else {\n                        new_lcs_6320 = eta_p_6296;\n                    }\n                    \n                    int32_t new_len_6322 = add32(eta_p_6291, eta_p_6297);\n                    int32_t new_first_6323;\n                    \n                    if (cond_6300) {\n                        new_first_6323 = eta_p_6298;\n                    } else {\n                        new_first_6323 = eta_p_6292;\n                    }\n                    \n                    int32_t new_last_6324;\n                    \n                    if (cond_f_res_6301) {\n                        new_last_6324 = eta_p_6293;\n                    } else {\n                        new_last_6324 = eta_p_6299;\n                    }\n                    eta_p_6288 = new_lss_6309;\n                    eta_p_6289 = new_lis_6316;\n                    eta_p_6290 = new_lcs_6320;\n                    eta_p_6291 = new_len_6322;\n                    eta_p_6292 = new_first_6323;\n                    eta_p_6293 = new_last_6324;\n                }\n                // write result of operation\n                {\n                    ((volatile __local int32_t *) local_mem_6254)[sext_i32_i64(local_tid_6243)] = eta_p_6288;\n                    ((volatile __local int32_t *) local_mem_6254)[squot64(offset_6248, (int64_t) 4) + sext_i32_i64(local_tid_6243)] = eta_p_6289;\n                    ((volatile __local int32_t *) local_mem_6254)[squot64(offset_6249, (int64_t) 4) + sext_i32_i64(local_tid_6243)] = eta_p_6290;\n                    ((volatile __local int32_t *) local_mem_6254)[squot64(offset_6250, (int64_t) 4) + sext_i32_i64(local_tid_6243)] = eta_p_6291;\n                    ((volatile __local int32_t *) local_mem_6254)[squot64(offset_6251, (int64_t) 4) + sext_i32_i64(local_tid_6243)] = eta_p_6292;\n                    ((volatile __local int32_t *) local_mem_6254)[squot64(offset_6252, (int64_t) 4) + sext_i32_i64(local_tid_6243)] = eta_p_6293;\n                }\n            }\n            offs", "et_6369 *= 2;\n        }\n        while (slt32(skip_waves_6370, squot32(sext_i64_i32(segred_tblock_sizze_6179) + wave_sizze_6245 - 1, wave_sizze_6245))) {\n            barrier(CLK_LOCAL_MEM_FENCE);\n            offset_6369 = skip_waves_6370 * wave_sizze_6245;\n            if (slt32(local_tid_6243 + offset_6369, sext_i64_i32(segred_tblock_sizze_6179)) && ((local_tid_6243 - squot32(local_tid_6243, wave_sizze_6245) * wave_sizze_6245) == 0 && (squot32(local_tid_6243, wave_sizze_6245) & (2 * skip_waves_6370 - 1)) == 0)) {\n                // read array element\n                {\n                    eta_p_6294 = ((__local int32_t *) local_mem_6254)[sext_i32_i64(local_tid_6243 + offset_6369)];\n                    eta_p_6295 = ((__local int32_t *) local_mem_6254)[squot64(offset_6248, (int64_t) 4) + sext_i32_i64(local_tid_6243 + offset_6369)];\n                    eta_p_6296 = ((__local int32_t *) local_mem_6254)[squot64(offset_6249, (int64_t) 4) + sext_i32_i64(local_tid_6243 + offset_6369)];\n                    eta_p_6297 = ((__local int32_t *) local_mem_6254)[squot64(offset_6250, (int64_t) 4) + sext_i32_i64(local_tid_6243 + offset_6369)];\n                    eta_p_6298 = ((__local int32_t *) local_mem_6254)[squot64(offset_6251, (int64_t) 4) + sext_i32_i64(local_tid_6243 + offset_6369)];\n                    eta_p_6299 = ((__local int32_t *) local_mem_6254)[squot64(offset_6252, (int64_t) 4) + sext_i32_i64(local_tid_6243 + offset_6369)];\n                }\n                // apply reduction operation\n                {\n                    bool cond_6300 = eta_p_6291 == 0;\n                    bool cond_f_res_6301 = eta_p_6297 == 0;\n                    bool x_6302 = !cond_6300;\n                    bool y_6303 = cond_f_res_6301 && x_6302;\n                    bool cond_6304 = cond_6300 || y_6303;\n                    bool lifted_pred2_res_6305 = sle32(eta_p_6293, eta_p_6298);\n                    bool x_6306 = !cond_6304;\n                    bool y_6307 = lifted_pred2_res_6305 && x_6306;\n   ",
-                                    "                 bool segments_connect_6308 = cond_6304 || y_6307;\n                    int32_t new_lss_6309;\n                    \n                    if (segments_connect_6308) {\n                        int32_t max_arg1_6310 = add32(eta_p_6290, eta_p_6295);\n                        int32_t max_res_6311 = smax32(eta_p_6294, max_arg1_6310);\n                        int32_t max_res_6312 = smax32(eta_p_6288, max_res_6311);\n                        \n                        new_lss_6309 = max_res_6312;\n                    } else {\n                        int32_t max_res_6313 = smax32(eta_p_6288, eta_p_6294);\n                        \n                        new_lss_6309 = max_res_6313;\n                    }\n                    \n                    bool cond_t_res_6314 = eta_p_6289 == eta_p_6291;\n                    bool x_6315 = segments_connect_6308 && cond_t_res_6314;\n                    int32_t new_lis_6316;\n                    \n                    if (x_6315) {\n                        int32_t new_lis_t_res_6317 = add32(eta_p_6291, eta_p_6295);\n                        \n                        new_lis_6316 = new_lis_t_res_6317;\n                    } else {\n                        new_lis_6316 = eta_p_6289;\n                    }\n                    \n                    bool cond_t_res_6318 = eta_p_6296 == eta_p_6297;\n                    bool x_6319 = segments_connect_6308 && cond_t_res_6318;\n                    int32_t new_lcs_6320;\n                    \n                    if (x_6319) {\n                        int32_t new_lcs_t_res_6321 = add32(eta_p_6290, eta_p_6297);\n                        \n                        new_lcs_6320 = new_lcs_t_res_6321;\n                    } else {\n                        new_lcs_6320 = eta_p_6296;\n                    }\n                    \n                    int32_t new_len_6322 = add32(eta_p_6291, eta_p_6297);\n                    int32_t new_first_6323;\n                    \n                    if (cond_6300) {\n                        new_fi", "rst_6323 = eta_p_6298;\n                    } else {\n                        new_first_6323 = eta_p_6292;\n                    }\n                    \n                    int32_t new_last_6324;\n                    \n                    if (cond_f_res_6301) {\n                        new_last_6324 = eta_p_6293;\n                    } else {\n                        new_last_6324 = eta_p_6299;\n                    }\n                    eta_p_6288 = new_lss_6309;\n                    eta_p_6289 = new_lis_6316;\n                    eta_p_6290 = new_lcs_6320;\n                    eta_p_6291 = new_len_6322;\n                    eta_p_6292 = new_first_6323;\n                    eta_p_6293 = new_last_6324;\n                }\n                // write result of operation\n                {\n                    ((__local int32_t *) local_mem_6254)[sext_i32_i64(local_tid_6243)] = eta_p_6288;\n                    ((__local int32_t *) local_mem_6254)[squot64(offset_6248, (int64_t) 4) + sext_i32_i64(local_tid_6243)] = eta_p_6289;\n                    ((__local int32_t *) local_mem_6254)[squot64(offset_6249, (int64_t) 4) + sext_i32_i64(local_tid_6243)] = eta_p_6290;\n                    ((__local int32_t *) local_mem_6254)[squot64(offset_6250, (int64_t) 4) + sext_i32_i64(local_tid_6243)] = eta_p_6291;\n                    ((__local int32_t *) local_mem_6254)[squot64(offset_6251, (int64_t) 4) + sext_i32_i64(local_tid_6243)] = eta_p_6292;\n                    ((__local int32_t *) local_mem_6254)[squot64(offset_6252, (int64_t) 4) + sext_i32_i64(local_tid_6243)] = eta_p_6293;\n                }\n            }\n            skip_waves_6370 *= 2;\n        }\n        barrier(CLK_LOCAL_MEM_FENCE);\n        barrier(CLK_LOCAL_MEM_FENCE);\n        // thread 0 updates per-block acc(s); rest reset to ne\n        {\n            if (sext_i32_i64(local_tid_6243) == (int64_t) 0) {\n                eta_p_block_res_acc_6282 = eta_p_6288;\n                eta_p_block_res_acc_6283 = eta_p_6289;\n                eta_p_block_res_acc_6284", " = eta_p_6290;\n                eta_p_block_res_acc_6285 = eta_p_6291;\n                eta_p_block_res_acc_6286 = eta_p_6292;\n                eta_p_block_res_acc_6287 = eta_p_6293;\n            } else {\n                eta_p_block_res_acc_6282 = 0;\n                eta_p_block_res_acc_6283 = 0;\n                eta_p_block_res_acc_6284 = 0;\n                eta_p_block_res_acc_6285 = 0;\n                eta_p_block_res_acc_6286 = 0;\n                eta_p_block_res_acc_6287 = 0;\n            }\n        }\n    }\n    barrier(CLK_LOCAL_MEM_FENCE);\n    // first thread in block saves block result to global memory\n    {\n        if (local_tid_6243 == 0) {\n            ((__global int32_t *) segred_tmp_mem_6229)[sext_i32_i64(block_id_6244)] = eta_p_block_res_acc_6282;\n            mem_fence_global();\n            ((__global int32_t *) segred_tmp_mem_6231)[sext_i32_i64(block_id_6244)] = eta_p_block_res_acc_6283;\n            mem_fence_global();\n            ((__global int32_t *) segred_tmp_mem_6233)[sext_i32_i64(block_id_6244)] = eta_p_block_res_acc_6284;\n            mem_fence_global();\n            ((__global int32_t *) segred_tmp_mem_6235)[sext_i32_i64(block_id_6244)] = eta_p_block_res_acc_6285;\n            mem_fence_global();\n            ((__global int32_t *) segred_tmp_mem_6237)[sext_i32_i64(block_id_6244)] = eta_p_block_res_acc_6286;\n            mem_fence_global();\n            ((__global int32_t *) segred_tmp_mem_6239)[sext_i32_i64(block_id_6244)] = eta_p_block_res_acc_6287;\n            mem_fence_global();\n            old_counter_6371 = atomic_add_i32_global(&((volatile __global int *) counters_mem_6207)[(int64_t) 0], (int) 1);\n            ((__local bool *) sync_arr_mem_6279)[(int64_t) 0] = old_counter_6371 == sext_i64_i32(num_tblocks_6181 - (int64_t) 1);\n        }\n    }\n    barrier(CLK_GLOBAL_MEM_FENCE | CLK_LOCAL_MEM_FENCE);\n    is_last_block_6372 = ((__local bool *) sync_arr_mem_6279)[(int64_t) 0];\n    if (is_last_block_6372) {\n        if (local_tid_6243 == 0) {\n            old_count",
-                                    "er_6371 = atomic_add_i32_global(&((volatile __global int *) counters_mem_6207)[(int64_t) 0], (int) sext_i64_i32((int64_t) 0 - num_tblocks_6181));\n        }\n        // read in the per-block-results\n        {\n            int64_t read_per_thread_6373 = sdiv_up64(num_tblocks_6181, segred_tblock_sizze_6179);\n            \n            eta_p_6128 = 0;\n            eta_p_6129 = 0;\n            eta_p_6130 = 0;\n            eta_p_6131 = 0;\n            eta_p_6132 = 0;\n            eta_p_6133 = 0;\n            for (int64_t i_6374 = 0; i_6374 < read_per_thread_6373; i_6374++) {\n                int64_t block_res_id_6375 = sext_i32_i64(local_tid_6243) * read_per_thread_6373 + i_6374;\n                int64_t index_of_block_res_6376 = block_res_id_6375;\n                \n                if (slt64(block_res_id_6375, num_tblocks_6181)) {\n                    eta_p_6134 = ((__global int32_t *) segred_tmp_mem_6229)[index_of_block_res_6376];\n                    eta_p_6135 = ((__global int32_t *) segred_tmp_mem_6231)[index_of_block_res_6376];\n                    eta_p_6136 = ((__global int32_t *) segred_tmp_mem_6233)[index_of_block_res_6376];\n                    eta_p_6137 = ((__global int32_t *) segred_tmp_mem_6235)[index_of_block_res_6376];\n                    eta_p_6138 = ((__global int32_t *) segred_tmp_mem_6237)[index_of_block_res_6376];\n                    eta_p_6139 = ((__global int32_t *) segred_tmp_mem_6239)[index_of_block_res_6376];\n                    \n                    bool cond_6140 = eta_p_6131 == 0;\n                    bool cond_f_res_6141 = eta_p_6137 == 0;\n                    bool x_6142 = !cond_6140;\n                    bool y_6143 = cond_f_res_6141 && x_6142;\n                    bool cond_6144 = cond_6140 || y_6143;\n                    bool lifted_pred2_res_6145 = sle32(eta_p_6133, eta_p_6138);\n                    bool x_6146 = !cond_6144;\n                    bool y_6147 = lifted_pred2_res_6145 && x_6146;\n                    bool segments_connect_6148 = cond_6144 || y_6147;\n ", "                   int32_t new_lss_6149;\n                    \n                    if (segments_connect_6148) {\n                        int32_t max_arg1_6150 = add32(eta_p_6130, eta_p_6135);\n                        int32_t max_res_6151 = smax32(eta_p_6134, max_arg1_6150);\n                        int32_t max_res_6152 = smax32(eta_p_6128, max_res_6151);\n                        \n                        new_lss_6149 = max_res_6152;\n                    } else {\n                        int32_t max_res_6153 = smax32(eta_p_6128, eta_p_6134);\n                        \n                        new_lss_6149 = max_res_6153;\n                    }\n                    \n                    bool cond_t_res_6154 = eta_p_6129 == eta_p_6131;\n                    bool x_6155 = segments_connect_6148 && cond_t_res_6154;\n                    int32_t new_lis_6156;\n                    \n                    if (x_6155) {\n                        int32_t new_lis_t_res_6157 = add32(eta_p_6131, eta_p_6135);\n                        \n                        new_lis_6156 = new_lis_t_res_6157;\n                    } else {\n                        new_lis_6156 = eta_p_6129;\n                    }\n                    \n                    bool cond_t_res_6158 = eta_p_6136 == eta_p_6137;\n                    bool x_6159 = segments_connect_6148 && cond_t_res_6158;\n                    int32_t new_lcs_6160;\n                    \n                    if (x_6159) {\n                        int32_t new_lcs_t_res_6161 = add32(eta_p_6130, eta_p_6137);\n                        \n                        new_lcs_6160 = new_lcs_t_res_6161;\n                    } else {\n                        new_lcs_6160 = eta_p_6136;\n                    }\n                    \n                    int32_t new_len_6162 = add32(eta_p_6131, eta_p_6137);\n                    int32_t new_first_6163;\n                    \n                    if (cond_6140) {\n                        new_first_6163 = eta_p_6138;\n                    } else {\n                ", "        new_first_6163 = eta_p_6132;\n                    }\n                    \n                    int32_t new_last_6164;\n                    \n                    if (cond_f_res_6141) {\n                        new_last_6164 = eta_p_6133;\n                    } else {\n                        new_last_6164 = eta_p_6139;\n                    }\n                    eta_p_6128 = new_lss_6149;\n                    eta_p_6129 = new_lis_6156;\n                    eta_p_6130 = new_lcs_6160;\n                    eta_p_6131 = new_len_6162;\n                    eta_p_6132 = new_first_6163;\n                    eta_p_6133 = new_last_6164;\n                }\n            }\n        }\n        ((__local int32_t *) local_mem_6254)[sext_i32_i64(local_tid_6243)] = eta_p_6128;\n        ((__local int32_t *) local_mem_6254)[squot64(offset_6248, (int64_t) 4) + sext_i32_i64(local_tid_6243)] = eta_p_6129;\n        ((__local int32_t *) local_mem_6254)[squot64(offset_6249, (int64_t) 4) + sext_i32_i64(local_tid_6243)] = eta_p_6130;\n        ((__local int32_t *) local_mem_6254)[squot64(offset_6250, (int64_t) 4) + sext_i32_i64(local_tid_6243)] = eta_p_6131;\n        ((__local int32_t *) local_mem_6254)[squot64(offset_6251, (int64_t) 4) + sext_i32_i64(local_tid_6243)] = eta_p_6132;\n        ((__local int32_t *) local_mem_6254)[squot64(offset_6252, (int64_t) 4) + sext_i32_i64(local_tid_6243)] = eta_p_6133;\n        barrier(CLK_LOCAL_MEM_FENCE);\n        // reduce the per-block results\n        {\n            int32_t offset_6377;\n            int32_t skip_waves_6378 = 1;\n            int32_t eta_p_6288;\n            int32_t eta_p_6289;\n            int32_t eta_p_6290;\n            int32_t eta_p_6291;\n            int32_t eta_p_6292;\n            int32_t eta_p_6293;\n            int32_t eta_p_6294;\n            int32_t eta_p_6295;\n            int32_t eta_p_6296;\n            int32_t eta_p_6297;\n            int32_t eta_p_6298;\n            int32_t eta_p_6299;\n            \n            offset_6377 = 0;\n            // participating ",
-                                    "threads read initial accumulator\n            {\n                if (slt32(local_tid_6243, sext_i64_i32(segred_tblock_sizze_6179))) {\n                    eta_p_6288 = ((__local int32_t *) local_mem_6254)[sext_i32_i64(local_tid_6243 + offset_6377)];\n                    eta_p_6289 = ((__local int32_t *) local_mem_6254)[squot64(offset_6248, (int64_t) 4) + sext_i32_i64(local_tid_6243 + offset_6377)];\n                    eta_p_6290 = ((__local int32_t *) local_mem_6254)[squot64(offset_6249, (int64_t) 4) + sext_i32_i64(local_tid_6243 + offset_6377)];\n                    eta_p_6291 = ((__local int32_t *) local_mem_6254)[squot64(offset_6250, (int64_t) 4) + sext_i32_i64(local_tid_6243 + offset_6377)];\n                    eta_p_6292 = ((__local int32_t *) local_mem_6254)[squot64(offset_6251, (int64_t) 4) + sext_i32_i64(local_tid_6243 + offset_6377)];\n                    eta_p_6293 = ((__local int32_t *) local_mem_6254)[squot64(offset_6252, (int64_t) 4) + sext_i32_i64(local_tid_6243 + offset_6377)];\n                }\n            }\n            offset_6377 = 1;\n            while (slt32(offset_6377, wave_sizze_6245)) {\n                if (slt32(local_tid_6243 + offset_6377, sext_i64_i32(segred_tblock_sizze_6179)) && ((local_tid_6243 - squot32(local_tid_6243, wave_sizze_6245) * wave_sizze_6245) & (2 * offset_6377 - 1)) == 0) {\n                    // read array element\n                    {\n                        eta_p_6294 = ((volatile __local int32_t *) local_mem_6254)[sext_i32_i64(local_tid_6243 + offset_6377)];\n                        eta_p_6295 = ((volatile __local int32_t *) local_mem_6254)[squot64(offset_6248, (int64_t) 4) + sext_i32_i64(local_tid_6243 + offset_6377)];\n                        eta_p_6296 = ((volatile __local int32_t *) local_mem_6254)[squot64(offset_6249, (int64_t) 4) + sext_i32_i64(local_tid_6243 + offset_6377)];\n                        eta_p_6297 = ((volatile __local int32_t *) local_mem_6254)[squot64(offset_6250, (int64_t) 4) + sext_i32_i64(local_tid_6243 +", " offset_6377)];\n                        eta_p_6298 = ((volatile __local int32_t *) local_mem_6254)[squot64(offset_6251, (int64_t) 4) + sext_i32_i64(local_tid_6243 + offset_6377)];\n                        eta_p_6299 = ((volatile __local int32_t *) local_mem_6254)[squot64(offset_6252, (int64_t) 4) + sext_i32_i64(local_tid_6243 + offset_6377)];\n                    }\n                    // apply reduction operation\n                    {\n                        bool cond_6300 = eta_p_6291 == 0;\n                        bool cond_f_res_6301 = eta_p_6297 == 0;\n                        bool x_6302 = !cond_6300;\n                        bool y_6303 = cond_f_res_6301 && x_6302;\n                        bool cond_6304 = cond_6300 || y_6303;\n                        bool lifted_pred2_res_6305 = sle32(eta_p_6293, eta_p_6298);\n                        bool x_6306 = !cond_6304;\n                        bool y_6307 = lifted_pred2_res_6305 && x_6306;\n                        bool segments_connect_6308 = cond_6304 || y_6307;\n                        int32_t new_lss_6309;\n                        \n                        if (segments_connect_6308) {\n                            int32_t max_arg1_6310 = add32(eta_p_6290, eta_p_6295);\n                            int32_t max_res_6311 = smax32(eta_p_6294, max_arg1_6310);\n                            int32_t max_res_6312 = smax32(eta_p_6288, max_res_6311);\n                            \n                            new_lss_6309 = max_res_6312;\n                        } else {\n                            int32_t max_res_6313 = smax32(eta_p_6288, eta_p_6294);\n                            \n                            new_lss_6309 = max_res_6313;\n                        }\n                        \n                        bool cond_t_res_6314 = eta_p_6289 == eta_p_6291;\n                        bool x_6315 = segments_connect_6308 && cond_t_res_6314;\n                        int32_t new_lis_6316;\n                        \n                        if (x_6315) {\n      ", "                      int32_t new_lis_t_res_6317 = add32(eta_p_6291, eta_p_6295);\n                            \n                            new_lis_6316 = new_lis_t_res_6317;\n                        } else {\n                            new_lis_6316 = eta_p_6289;\n                        }\n                        \n                        bool cond_t_res_6318 = eta_p_6296 == eta_p_6297;\n                        bool x_6319 = segments_connect_6308 && cond_t_res_6318;\n                        int32_t new_lcs_6320;\n                        \n                        if (x_6319) {\n                            int32_t new_lcs_t_res_6321 = add32(eta_p_6290, eta_p_6297);\n                            \n                            new_lcs_6320 = new_lcs_t_res_6321;\n                        } else {\n                            new_lcs_6320 = eta_p_6296;\n                        }\n                        \n                        int32_t new_len_6322 = add32(eta_p_6291, eta_p_6297);\n                        int32_t new_first_6323;\n                        \n                        if (cond_6300) {\n                            new_first_6323 = eta_p_6298;\n                        } else {\n                            new_first_6323 = eta_p_6292;\n                        }\n                        \n                        int32_t new_last_6324;\n                        \n                        if (cond_f_res_6301) {\n                            new_last_6324 = eta_p_6293;\n                        } else {\n                            new_last_6324 = eta_p_6299;\n                        }\n                        eta_p_6288 = new_lss_6309;\n                        eta_p_6289 = new_lis_6316;\n                        eta_p_6290 = new_lcs_6320;\n                        eta_p_6291 = new_len_6322;\n                        eta_p_6292 = new_first_6323;\n                        eta_p_6293 = new_last_6324;\n                    }\n                    // write result of operation\n                    {\n                        ",
-                                    "((volatile __local int32_t *) local_mem_6254)[sext_i32_i64(local_tid_6243)] = eta_p_6288;\n                        ((volatile __local int32_t *) local_mem_6254)[squot64(offset_6248, (int64_t) 4) + sext_i32_i64(local_tid_6243)] = eta_p_6289;\n                        ((volatile __local int32_t *) local_mem_6254)[squot64(offset_6249, (int64_t) 4) + sext_i32_i64(local_tid_6243)] = eta_p_6290;\n                        ((volatile __local int32_t *) local_mem_6254)[squot64(offset_6250, (int64_t) 4) + sext_i32_i64(local_tid_6243)] = eta_p_6291;\n                        ((volatile __local int32_t *) local_mem_6254)[squot64(offset_6251, (int64_t) 4) + sext_i32_i64(local_tid_6243)] = eta_p_6292;\n                        ((volatile __local int32_t *) local_mem_6254)[squot64(offset_6252, (int64_t) 4) + sext_i32_i64(local_tid_6243)] = eta_p_6293;\n                    }\n                }\n                offset_6377 *= 2;\n            }\n            while (slt32(skip_waves_6378, squot32(sext_i64_i32(segred_tblock_sizze_6179) + wave_sizze_6245 - 1, wave_sizze_6245))) {\n                barrier(CLK_LOCAL_MEM_FENCE);\n                offset_6377 = skip_waves_6378 * wave_sizze_6245;\n                if (slt32(local_tid_6243 + offset_6377, sext_i64_i32(segred_tblock_sizze_6179)) && ((local_tid_6243 - squot32(local_tid_6243, wave_sizze_6245) * wave_sizze_6245) == 0 && (squot32(local_tid_6243, wave_sizze_6245) & (2 * skip_waves_6378 - 1)) == 0)) {\n                    // read array element\n                    {\n                        eta_p_6294 = ((__local int32_t *) local_mem_6254)[sext_i32_i64(local_tid_6243 + offset_6377)];\n                        eta_p_6295 = ((__local int32_t *) local_mem_6254)[squot64(offset_6248, (int64_t) 4) + sext_i32_i64(local_tid_6243 + offset_6377)];\n                        eta_p_6296 = ((__local int32_t *) local_mem_6254)[squot64(offset_6249, (int64_t) 4) + sext_i32_i64(local_tid_6243 + offset_6377)];\n                        eta_p_6297 = ((__local int32_t *) local_mem_6", "254)[squot64(offset_6250, (int64_t) 4) + sext_i32_i64(local_tid_6243 + offset_6377)];\n                        eta_p_6298 = ((__local int32_t *) local_mem_6254)[squot64(offset_6251, (int64_t) 4) + sext_i32_i64(local_tid_6243 + offset_6377)];\n                        eta_p_6299 = ((__local int32_t *) local_mem_6254)[squot64(offset_6252, (int64_t) 4) + sext_i32_i64(local_tid_6243 + offset_6377)];\n                    }\n                    // apply reduction operation\n                    {\n                        bool cond_6300 = eta_p_6291 == 0;\n                        bool cond_f_res_6301 = eta_p_6297 == 0;\n                        bool x_6302 = !cond_6300;\n                        bool y_6303 = cond_f_res_6301 && x_6302;\n                        bool cond_6304 = cond_6300 || y_6303;\n                        bool lifted_pred2_res_6305 = sle32(eta_p_6293, eta_p_6298);\n                        bool x_6306 = !cond_6304;\n                        bool y_6307 = lifted_pred2_res_6305 && x_6306;\n                        bool segments_connect_6308 = cond_6304 || y_6307;\n                        int32_t new_lss_6309;\n                        \n                        if (segments_connect_6308) {\n                            int32_t max_arg1_6310 = add32(eta_p_6290, eta_p_6295);\n                            int32_t max_res_6311 = smax32(eta_p_6294, max_arg1_6310);\n                            int32_t max_res_6312 = smax32(eta_p_6288, max_res_6311);\n                            \n                            new_lss_6309 = max_res_6312;\n                        } else {\n                            int32_t max_res_6313 = smax32(eta_p_6288, eta_p_6294);\n                            \n                            new_lss_6309 = max_res_6313;\n                        }\n                        \n                        bool cond_t_res_6314 = eta_p_6289 == eta_p_6291;\n                        bool x_6315 = segments_connect_6308 && cond_t_res_6314;\n                        int32_t new_lis_6316;\n                 ", "       \n                        if (x_6315) {\n                            int32_t new_lis_t_res_6317 = add32(eta_p_6291, eta_p_6295);\n                            \n                            new_lis_6316 = new_lis_t_res_6317;\n                        } else {\n                            new_lis_6316 = eta_p_6289;\n                        }\n                        \n                        bool cond_t_res_6318 = eta_p_6296 == eta_p_6297;\n                        bool x_6319 = segments_connect_6308 && cond_t_res_6318;\n                        int32_t new_lcs_6320;\n                        \n                        if (x_6319) {\n                            int32_t new_lcs_t_res_6321 = add32(eta_p_6290, eta_p_6297);\n                            \n                            new_lcs_6320 = new_lcs_t_res_6321;\n                        } else {\n                            new_lcs_6320 = eta_p_6296;\n                        }\n                        \n                        int32_t new_len_6322 = add32(eta_p_6291, eta_p_6297);\n                        int32_t new_first_6323;\n                        \n                        if (cond_6300) {\n                            new_first_6323 = eta_p_6298;\n                        } else {\n                            new_first_6323 = eta_p_6292;\n                        }\n                        \n                        int32_t new_last_6324;\n                        \n                        if (cond_f_res_6301) {\n                            new_last_6324 = eta_p_6293;\n                        } else {\n                            new_last_6324 = eta_p_6299;\n                        }\n                        eta_p_6288 = new_lss_6309;\n                        eta_p_6289 = new_lis_6316;\n                        eta_p_6290 = new_lcs_6320;\n                        eta_p_6291 = new_len_6322;\n                        eta_p_6292 = new_first_6323;\n                        eta_p_6293 = new_last_6324;\n                    }\n                    // write result of oper", "ation\n                    {\n                        ((__local int32_t *) local_mem_6254)[sext_i32_i64(local_tid_6243)] = eta_p_6288;\n                        ((__local int32_t *) local_mem_6254)[squot64(offset_6248, (int64_t) 4) + sext_i32_i64(local_tid_6243)] = eta_p_6289;\n                        ((__local int32_t *) local_mem_6254)[squot64(offset_6249, (int64_t) 4) + sext_i32_i64(local_tid_6243)] = eta_p_6290;\n                        ((__local int32_t *) local_mem_6254)[squot64(offset_6250, (int64_t) 4) + sext_i32_i64(local_tid_6243)] = eta_p_6291;\n                        ((__local int32_t *) local_mem_6254)[squot64(offset_6251, (int64_t) 4) + sext_i32_i64(local_tid_6243)] = eta_p_6292;\n                        ((__local int32_t *) local_mem_6254)[squot64(offset_6252, (int64_t) 4) + sext_i32_i64(local_tid_6243)] = eta_p_6293;\n                    }\n                }\n                skip_waves_6378 *= 2;\n            }\n            barrier(CLK_LOCAL_MEM_FENCE);\n            // and back to memory with the final result\n            {\n                if (local_tid_6243 == 0) {\n                    ((__global int32_t *) mem_6194)[(int64_t) 0] = eta_p_6288;\n                    ((__global int32_t *) mem_6195)[(int64_t) 0] = eta_p_6289;\n                    ((__global int32_t *) mem_6196)[(int64_t) 0] = eta_p_6290;\n                    ((__global int32_t *) mem_6197)[(int64_t) 0] = eta_p_6291;\n                    ((__global int32_t *) mem_6198)[(int64_t) 0] = eta_p_6292;\n                    ((__global int32_t *) mem_6199)[(int64_t) 0] = eta_p_6293;\n                }\n            }\n        }\n    }\n    \n  error_6:\n    return;\n    #undef segred_tblock_sizze_6179\n    #undef chunk_sizze_6206\n}\n", NULL};
+                                    "                         \\\n  }                                                                     \\\n  if (r > 4) {                                                          \\\n    int64_t i = remainder % shape4;                                     \\\n    dst_offset += i * dst_stride4;                                      \\\n    src_offset += i * src_stride4;                                      \\\n    remainder /= shape4;                                                \\\n  }                                                                     \\\n  if (r > 5) {                                                          \\\n    int64_t i = remainder % shape5;                                     \\\n    dst_offset += i * dst_stride5;                                      \\\n    src_offset += i * src_stride5;                                      \\\n    remainder /= shape5;                                                \\\n  }                                                                     \\\n  if (r > 6) {                                                          \\\n    int64_t i = remainder % shape6;                                     \\\n    dst_offset += i * dst_stride6;                                      \\\n    src_offset += i * src_stride6;                                      \\\n    remainder /= shape6;                                                \\\n  }                                                                     \\\n  if (r > 7) {                                                          \\\n    int64_t i = remainder % shape7;                                     \\\n    dst_offset += i * dst_stride7;                                      \\\n    src_offset += i * src_stride7;                                      \\\n    remainder /= shape7;                                                \\\n  }                                                                     \\\n                                                                        \\\n  dst_mem[dst_offset] = src_mem[src_offset];     ", "                       \\\n}\n\nGEN_COPY_KERNEL(1b, uint8_t)\nGEN_COPY_KERNEL(2b, uint16_t)\nGEN_COPY_KERNEL(4b, uint32_t)\nGEN_COPY_KERNEL(8b, uint64_t)\n\n// End of copy.cl\n\n\n\n", NULL};
 // Start of gpu_prototypes.h
 
 // Constants used for transpositions.  In principle these should be configurable.
@@ -9044,22 +9006,10 @@ GEN_LMAD_COPY_GPU2GPU(8b, uint64_t)
 
 static int gpu_macros(struct futhark_context *ctx, char ***names_out, int64_t **values_out)
 {
-    int num_macros = 3;
+    int num_macros = 0;
     char **names = malloc(num_macros * sizeof(char *));
     int64_t *values = malloc(num_macros * sizeof(int64_t));
     
-    {
-        names[0] = "mainzisegred_nonseg_6191_dim1";
-        values[0] = *ctx->tuning_params.mainzisegred_tblock_sizze_6178;
-    }
-    {
-        names[1] = "mainzisegred_nonseg_6191zisegred_tblock_sizze_6179";
-        values[1] = *ctx->tuning_params.mainzisegred_tblock_sizze_6178;
-    }
-    {
-        names[2] = "mainzisegred_nonseg_6191zichunk_sizze_6206";
-        values[2] = smax64((int64_t) 1, smin64(squot64(squot64(ctx->max_shared_memory, ctx->max_thread_block_size), (int64_t) 4), squot64(squot64(ctx->max_registers, ctx->max_thread_block_size) - (int64_t) 1 - squot64(smax64((int64_t) 4, (int64_t) 4) + smax64((int64_t) 4, (int64_t) 4) + smax64((int64_t) 4, (int64_t) 4) + smax64((int64_t) 4, (int64_t) 4) + smax64((int64_t) 4, (int64_t) 4) + smax64((int64_t) 4, (int64_t) 4), (int64_t) 4), (int64_t) 2 * squot64(smax64((int64_t) 4, (int64_t) 4) + smax64((int64_t) 4, (int64_t) 4) + smax64((int64_t) 4, (int64_t) 4) + smax64((int64_t) 4, (int64_t) 4) + smax64((int64_t) 4, (int64_t) 4) + smax64((int64_t) 4, (int64_t) 4), (int64_t) 4))));
-    }
     *names_out = names;
     *values_out = values;
     return num_macros;
@@ -9072,8 +9022,6 @@ static char *get_failure_msg(int failure_idx, int64_t args[])
 }
 struct program {
     int dummy;
-    gpu_kernel builtinzhreplicate_i32zireplicate_6214;
-    gpu_kernel mainzisegred_nonseg_6191;
 };
 static void setup_program(struct futhark_context *ctx)
 {
@@ -9083,8 +9031,6 @@ static void setup_program(struct futhark_context *ctx)
     
     (void) error;
     ctx->program = malloc(sizeof(struct program));
-    gpu_create_kernel(ctx, &ctx->program->builtinzhreplicate_i32zireplicate_6214, "builtinzhreplicate_i32zireplicate_6214");
-    gpu_create_kernel(ctx, &ctx->program->mainzisegred_nonseg_6191, "mainzisegred_nonseg_6191");
 }
 static void teardown_program(struct futhark_context *ctx)
 {
@@ -9093,16 +9039,11 @@ static void teardown_program(struct futhark_context *ctx)
     int error = 0;
     
     (void) error;
-    gpu_free_kernel(ctx, ctx->program->builtinzhreplicate_i32zireplicate_6214);
-    gpu_free_kernel(ctx, ctx->program->mainzisegred_nonseg_6191);
     free(ctx->program);
 }
 static void set_tuning_params(struct futhark_context *ctx)
 {
     (void) ctx;
-    ctx->tuning_params.builtinzhreplicate_i32zitblock_sizze_6218 = &ctx->cfg->tuning_params[0];
-    ctx->tuning_params.mainzisegred_num_tblocks_6180 = &ctx->cfg->tuning_params[1];
-    ctx->tuning_params.mainzisegred_tblock_sizze_6178 = &ctx->cfg->tuning_params[2];
 }
 int memblock_unref_device(struct futhark_context *ctx, struct memblock_device *block, const char *desc)
 {
@@ -9753,8 +9694,7 @@ GEN_LMAD_COPY(8b, uint64_t)
 
 #define FUTHARK_FUN_ATTR static
 
-FUTHARK_FUN_ATTR int futrts_builtinzhreplicate_i32(struct futhark_context *ctx, struct memblock_device mem_6209, int64_t num_elems_6210, int32_t val_6211);
-FUTHARK_FUN_ATTR int futrts_entry_main(struct futhark_context *ctx, int32_t *out_prim_out_6379, struct memblock_device xs_mem_6192, int64_t dz2080U_5846);
+
 
 static int init_constants(struct futhark_context *ctx)
 {
@@ -9762,17 +9702,6 @@ static int init_constants(struct futhark_context *ctx)
     
     int err = 0;
     
-    #define counters_mem_6207 (ctx->constants->counters_mem_6207)
-    counters_mem_6207.references = NULL;
-    if (memblock_alloc_device(ctx, &counters_mem_6207, (int64_t) 80, "counters_mem_6207")) {
-        err = 1;
-        goto cleanup;
-    }
-    if (futrts_builtinzhreplicate_i32(ctx, counters_mem_6207, (int64_t) 20, 0) != 0) {
-        err = 1;
-        goto cleanup;
-    }
-    #undef counters_mem_6207
     
   cleanup:
     return err;
@@ -9780,375 +9709,10 @@ static int init_constants(struct futhark_context *ctx)
 static int free_constants(struct futhark_context *ctx)
 {
     (void) ctx;
-    if (memblock_unref_device(ctx, &ctx->constants->counters_mem_6207, "ctx->constants->counters_mem_6207") != 0)
-        return 1;
     return 0;
 }
-static int gpu_kernel_builtinzhreplicate_i32zireplicate_6214(struct futhark_context *ctx, unsigned int grid_x, unsigned int grid_y, unsigned int grid_z, unsigned int block_x, unsigned int block_y, unsigned int block_z, unsigned int shared_bytes, int64_t arg0, int32_t arg1, int64_t arg2, int64_t arg3, int64_t arg4, gpu_mem arg5)
-{
-    if (grid_x * grid_y * grid_z * block_x * block_y * block_z != 0) {
-        void *args[6] = {&arg0, &arg1, &arg2, &arg3, &arg4, &arg5};
-        size_t args_sizes[6] = {sizeof(arg0), sizeof(arg1), sizeof(arg2), sizeof(arg3), sizeof(arg4), sizeof(arg5)};
-        
-        return gpu_launch_kernel(ctx, ctx->program->builtinzhreplicate_i32zireplicate_6214, "builtin#replicate_i32.replicate_6214", (const int32_t []) {grid_x, grid_y, grid_z}, (const int32_t []) {block_x, block_y, block_z}, shared_bytes, 6, args, args_sizes);
-    }
-    return FUTHARK_SUCCESS;
-}
-static int gpu_kernel_mainzisegred_nonseg_6191(struct futhark_context *ctx, unsigned int grid_x, unsigned int grid_y, unsigned int grid_z, unsigned int block_x, unsigned int block_y, unsigned int block_z, unsigned int shared_bytes, int64_t arg0, int64_t arg1, gpu_mem arg2, gpu_mem arg3, gpu_mem arg4, gpu_mem arg5, gpu_mem arg6, gpu_mem arg7, gpu_mem arg8, gpu_mem arg9, gpu_mem arg10, gpu_mem arg11, gpu_mem arg12, gpu_mem arg13, gpu_mem arg14, gpu_mem arg15)
-{
-    if (grid_x * grid_y * grid_z * block_x * block_y * block_z != 0) {
-        void *args[17] = {&ctx->global_failure, &arg0, &arg1, &arg2, &arg3, &arg4, &arg5, &arg6, &arg7, &arg8, &arg9, &arg10, &arg11, &arg12, &arg13, &arg14, &arg15};
-        size_t args_sizes[17] = {sizeof(ctx->global_failure), sizeof(arg0), sizeof(arg1), sizeof(arg2), sizeof(arg3), sizeof(arg4), sizeof(arg5), sizeof(arg6), sizeof(arg7), sizeof(arg8), sizeof(arg9), sizeof(arg10), sizeof(arg11), sizeof(arg12), sizeof(arg13), sizeof(arg14), sizeof(arg15)};
-        
-        return gpu_launch_kernel(ctx, ctx->program->mainzisegred_nonseg_6191, "main.segred_nonseg_6191", (const int32_t []) {grid_x, grid_y, grid_z}, (const int32_t []) {block_x, block_y, block_z}, shared_bytes, 17, args, args_sizes);
-    }
-    return FUTHARK_SUCCESS;
-}
-struct futhark_i32_1d {
-    struct memblock_device mem;
-    int64_t shape[1];
-};
-struct futhark_i32_1d *futhark_new_i32_1d(struct futhark_context *ctx, const int32_t *data, int64_t dim0)
-{
-    int err = 0;
-    struct futhark_i32_1d *bad = NULL;
-    struct futhark_i32_1d *arr = (struct futhark_i32_1d *) malloc(sizeof(struct futhark_i32_1d));
-    
-    if (arr == NULL)
-        return bad;
-    lock_lock(&ctx->lock);
-    CUDA_SUCCEED_FATAL(cuCtxPushCurrent(ctx->cu_ctx));
-    arr->mem.references = NULL;
-    if (memblock_alloc_device(ctx, &arr->mem, dim0 * 4, "arr->mem"))
-        err = 1;
-    arr->shape[0] = dim0;
-    err = memcpy_host2gpu(ctx, false, arr->mem.mem, 0, (const unsigned char *) data, 0, (size_t) dim0 * 4);
-    CUDA_SUCCEED_FATAL(cuCtxPopCurrent(&ctx->cu_ctx));
-    lock_unlock(&ctx->lock);
-    if (err != 0) {
-        free(arr);
-        return bad;
-    }
-    return arr;
-}
-struct futhark_i32_1d *futhark_new_raw_i32_1d(struct futhark_context *ctx, CUdeviceptr data, int64_t dim0)
-{
-    int err = 0;
-    struct futhark_i32_1d *bad = NULL;
-    struct futhark_i32_1d *arr = (struct futhark_i32_1d *) malloc(sizeof(struct futhark_i32_1d));
-    
-    if (arr == NULL)
-        return bad;
-    lock_lock(&ctx->lock);
-    CUDA_SUCCEED_FATAL(cuCtxPushCurrent(ctx->cu_ctx));
-    arr->mem.references = NULL;
-    arr->mem.mem = data;
-    arr->shape[0] = dim0;
-    CUDA_SUCCEED_FATAL(cuCtxPopCurrent(&ctx->cu_ctx));
-    lock_unlock(&ctx->lock);
-    return arr;
-}
-int futhark_free_i32_1d(struct futhark_context *ctx, struct futhark_i32_1d *arr)
-{
-    lock_lock(&ctx->lock);
-    CUDA_SUCCEED_FATAL(cuCtxPushCurrent(ctx->cu_ctx));
-    if (memblock_unref_device(ctx, &arr->mem, "arr->mem") != 0)
-        return 1;
-    CUDA_SUCCEED_FATAL(cuCtxPopCurrent(&ctx->cu_ctx));
-    lock_unlock(&ctx->lock);
-    free(arr);
-    return 0;
-}
-int futhark_values_i32_1d(struct futhark_context *ctx, struct futhark_i32_1d *arr, int32_t *data)
-{
-    int err = 0;
-    
-    lock_lock(&ctx->lock);
-    CUDA_SUCCEED_FATAL(cuCtxPushCurrent(ctx->cu_ctx));
-    err = memcpy_gpu2host(ctx, false, (unsigned char *) data, 0, arr->mem.mem, 0, (size_t) arr->shape[0] * 4);
-    CUDA_SUCCEED_FATAL(cuCtxPopCurrent(&ctx->cu_ctx));
-    lock_unlock(&ctx->lock);
-    return err;
-}
-int futhark_index_i32_1d(struct futhark_context *ctx, int32_t *out, struct futhark_i32_1d *arr, int64_t i0)
-{
-    int err = 0;
-    
-    if (i0 >= 0 && i0 < arr->shape[0]) {
-        lock_lock(&ctx->lock);
-        CUDA_SUCCEED_FATAL(cuCtxPushCurrent(ctx->cu_ctx));
-        err = memcpy_gpu2host(ctx, false, (unsigned char *) out, 0, arr->mem.mem, 4 * (i0 * 1), 4);
-        CUDA_SUCCEED_FATAL(cuCtxPopCurrent(&ctx->cu_ctx));
-        lock_unlock(&ctx->lock);
-    } else {
-        err = 1;
-        set_error(ctx, strdup("Index out of bounds."));
-    }
-    return err;
-}
-CUdeviceptr futhark_values_raw_i32_1d(struct futhark_context *ctx, struct futhark_i32_1d *arr)
-{
-    (void) ctx;
-    return arr->mem.mem;
-}
-const int64_t *futhark_shape_i32_1d(struct futhark_context *ctx, struct futhark_i32_1d *arr)
-{
-    (void) ctx;
-    return arr->shape;
-}
 
-FUTHARK_FUN_ATTR int futrts_builtinzhreplicate_i32(struct futhark_context *ctx, struct memblock_device mem_6209, int64_t num_elems_6210, int32_t val_6211)
-{
-    (void) ctx;
-    
-    int err = 0;
-    struct memblock_device counters_mem_6207 = ctx->constants->counters_mem_6207;
-    int64_t replicate_n_6213 = num_elems_6210;
-    int64_t tblock_sizze_6218;
-    
-    tblock_sizze_6218 = *ctx->tuning_params.builtinzhreplicate_i32zitblock_sizze_6218;
-    
-    int64_t virt_num_tblocks_6219 = sdiv_up64(replicate_n_6213, tblock_sizze_6218);
-    int64_t num_tblocks_6220 = smin64(virt_num_tblocks_6219, (int64_t) 1048576);
-    
-    {
-        err = gpu_kernel_builtinzhreplicate_i32zireplicate_6214(ctx, num_tblocks_6220, 1, 1, tblock_sizze_6218, 1, 1, (int64_t) 0, num_elems_6210, val_6211, replicate_n_6213, virt_num_tblocks_6219, num_tblocks_6220, mem_6209.mem);
-        if (err != FUTHARK_SUCCESS)
-            goto cleanup;
-    }
-    
-  cleanup:
-    { }
-    return err;
-}
-FUTHARK_FUN_ATTR int futrts_entry_main(struct futhark_context *ctx, int32_t *out_prim_out_6379, struct memblock_device xs_mem_6192, int64_t dz2080U_5846)
-{
-    (void) ctx;
-    
-    int err = 0;
-    struct memblock_device segred_tmp_mem_6239;
-    
-    segred_tmp_mem_6239.references = NULL;
-    
-    struct memblock_device segred_tmp_mem_6237;
-    
-    segred_tmp_mem_6237.references = NULL;
-    
-    struct memblock_device segred_tmp_mem_6235;
-    
-    segred_tmp_mem_6235.references = NULL;
-    
-    struct memblock_device segred_tmp_mem_6233;
-    
-    segred_tmp_mem_6233.references = NULL;
-    
-    struct memblock_device segred_tmp_mem_6231;
-    
-    segred_tmp_mem_6231.references = NULL;
-    
-    struct memblock_device segred_tmp_mem_6229;
-    
-    segred_tmp_mem_6229.references = NULL;
-    
-    struct memblock_device mem_6199;
-    
-    mem_6199.references = NULL;
-    
-    struct memblock_device mem_6198;
-    
-    mem_6198.references = NULL;
-    
-    struct memblock_device mem_6197;
-    
-    mem_6197.references = NULL;
-    
-    struct memblock_device mem_6196;
-    
-    mem_6196.references = NULL;
-    
-    struct memblock_device mem_6195;
-    
-    mem_6195.references = NULL;
-    
-    struct memblock_device mem_6194;
-    
-    mem_6194.references = NULL;
-    
-    struct memblock_device counters_mem_6207 = ctx->constants->counters_mem_6207;
-    int32_t prim_out_6200;
-    int64_t segred_tblock_sizze_6179;
-    
-    segred_tblock_sizze_6179 = *ctx->tuning_params.mainzisegred_tblock_sizze_6178;
-    
-    int64_t num_tblocks_6181;
-    int64_t max_num_tblocks_6201;
-    
-    max_num_tblocks_6201 = *ctx->tuning_params.mainzisegred_num_tblocks_6180;
-    num_tblocks_6181 = sext_i64_i32(smax64((int64_t) 1, smin64(sdiv_up64(dz2080U_5846, segred_tblock_sizze_6179), max_num_tblocks_6201)));
-    if (memblock_alloc_device(ctx, &mem_6194, (int64_t) 4, "mem_6194")) {
-        err = 1;
-        goto cleanup;
-    }
-    if (memblock_alloc_device(ctx, &mem_6195, (int64_t) 4, "mem_6195")) {
-        err = 1;
-        goto cleanup;
-    }
-    if (memblock_alloc_device(ctx, &mem_6196, (int64_t) 4, "mem_6196")) {
-        err = 1;
-        goto cleanup;
-    }
-    if (memblock_alloc_device(ctx, &mem_6197, (int64_t) 4, "mem_6197")) {
-        err = 1;
-        goto cleanup;
-    }
-    if (memblock_alloc_device(ctx, &mem_6198, (int64_t) 4, "mem_6198")) {
-        err = 1;
-        goto cleanup;
-    }
-    if (memblock_alloc_device(ctx, &mem_6199, (int64_t) 4, "mem_6199")) {
-        err = 1;
-        goto cleanup;
-    }
-    if (ctx->debugging)
-        fprintf(ctx->log, "%s\n", "\n# SegRed");
-    
-    int64_t shared_memory_6202;
-    
-    shared_memory_6202 = ctx->max_shared_memory;
-    
-    int64_t thread_block_sizze_6203;
-    
-    thread_block_sizze_6203 = ctx->max_thread_block_size;
-    
-    int64_t registers_6204;
-    
-    registers_6204 = ctx->max_registers;
-    
-    int64_t thread_block_sizze_6205;
-    
-    thread_block_sizze_6205 = ctx->max_thread_block_size;
-    
-    int64_t chunk_sizze_6206 = smax64((int64_t) 1, smin64(squot64(squot64(shared_memory_6202, thread_block_sizze_6203), (int64_t) 4), squot64(squot64(registers_6204, thread_block_sizze_6205) - (int64_t) 1 - squot64(smax64((int64_t) 4, (int64_t) 4) + smax64((int64_t) 4, (int64_t) 4) + smax64((int64_t) 4, (int64_t) 4) + smax64((int64_t) 4, (int64_t) 4) + smax64((int64_t) 4, (int64_t) 4) + smax64((int64_t) 4, (int64_t) 4), (int64_t) 4), (int64_t) 2 * squot64(smax64((int64_t) 4, (int64_t) 4) + smax64((int64_t) 4, (int64_t) 4) + smax64((int64_t) 4, (int64_t) 4) + smax64((int64_t) 4, (int64_t) 4) + smax64((int64_t) 4, (int64_t) 4) + smax64((int64_t) 4, (int64_t) 4), (int64_t) 4))));
-    
-    if (memblock_alloc_device(ctx, &segred_tmp_mem_6229, (int64_t) 4 * num_tblocks_6181, "segred_tmp_mem_6229")) {
-        err = 1;
-        goto cleanup;
-    }
-    if (memblock_alloc_device(ctx, &segred_tmp_mem_6231, (int64_t) 4 * num_tblocks_6181, "segred_tmp_mem_6231")) {
-        err = 1;
-        goto cleanup;
-    }
-    if (memblock_alloc_device(ctx, &segred_tmp_mem_6233, (int64_t) 4 * num_tblocks_6181, "segred_tmp_mem_6233")) {
-        err = 1;
-        goto cleanup;
-    }
-    if (memblock_alloc_device(ctx, &segred_tmp_mem_6235, (int64_t) 4 * num_tblocks_6181, "segred_tmp_mem_6235")) {
-        err = 1;
-        goto cleanup;
-    }
-    if (memblock_alloc_device(ctx, &segred_tmp_mem_6237, (int64_t) 4 * num_tblocks_6181, "segred_tmp_mem_6237")) {
-        err = 1;
-        goto cleanup;
-    }
-    if (memblock_alloc_device(ctx, &segred_tmp_mem_6239, (int64_t) 4 * num_tblocks_6181, "segred_tmp_mem_6239")) {
-        err = 1;
-        goto cleanup;
-    }
-    
-    int64_t num_threads_6241 = num_tblocks_6181 * segred_tblock_sizze_6179;
-    
-    {
-        err = gpu_kernel_mainzisegred_nonseg_6191(ctx, num_tblocks_6181, 1, 1, *ctx->tuning_params.mainzisegred_tblock_sizze_6178, 1, 1, 8 + (smax64(segred_tblock_sizze_6179 * chunk_sizze_6206 * (int64_t) 4, sdiv_up64(sdiv_up64(sdiv_up64(sdiv_up64(sdiv_up64(segred_tblock_sizze_6179 * (int64_t) 4, (int64_t) 4) * (int64_t) 4 + segred_tblock_sizze_6179 * (int64_t) 4, (int64_t) 4) * (int64_t) 4 + segred_tblock_sizze_6179 * (int64_t) 4, (int64_t) 4) * (int64_t) 4 + segred_tblock_sizze_6179 * (int64_t) 4, (int64_t) 4) * (int64_t) 4 + segred_tblock_sizze_6179 * (int64_t) 4, (int64_t) 4) * (int64_t) 4 + segred_tblock_sizze_6179 * (int64_t) 4) + srem64((int64_t) 8 - srem64(smax64(segred_tblock_sizze_6179 * chunk_sizze_6206 * (int64_t) 4, sdiv_up64(sdiv_up64(sdiv_up64(sdiv_up64(sdiv_up64(segred_tblock_sizze_6179 * (int64_t) 4, (int64_t) 4) * (int64_t) 4 + segred_tblock_sizze_6179 * (int64_t) 4, (int64_t) 4) * (int64_t) 4 + segred_tblock_sizze_6179 * (int64_t) 4, (int64_t) 4) * (int64_t) 4 + segred_tblock_sizze_6179 * (int64_t) 4, (int64_t) 4) * (int64_t) 4 + segred_tblock_sizze_6179 * (int64_t) 4, (int64_t) 4) * (int64_t) 4 + segred_tblock_sizze_6179 * (int64_t) 4), (int64_t) 8), (int64_t) 8)), dz2080U_5846, num_tblocks_6181, xs_mem_6192.mem, mem_6194.mem, mem_6195.mem, mem_6196.mem, mem_6197.mem, mem_6198.mem, mem_6199.mem, counters_mem_6207.mem, segred_tmp_mem_6229.mem, segred_tmp_mem_6231.mem, segred_tmp_mem_6233.mem, segred_tmp_mem_6235.mem, segred_tmp_mem_6237.mem, segred_tmp_mem_6239.mem);
-        if (err != FUTHARK_SUCCESS)
-            goto cleanup;
-    }
-    if (ctx->debugging)
-        fprintf(ctx->log, "%s\n", "");
-    if (memblock_unref_device(ctx, &mem_6195, "mem_6195") != 0)
-        return 1;
-    if (memblock_unref_device(ctx, &mem_6196, "mem_6196") != 0)
-        return 1;
-    if (memblock_unref_device(ctx, &mem_6197, "mem_6197") != 0)
-        return 1;
-    if (memblock_unref_device(ctx, &mem_6198, "mem_6198") != 0)
-        return 1;
-    if (memblock_unref_device(ctx, &mem_6199, "mem_6199") != 0)
-        return 1;
-    
-    int32_t read_res_6380;
-    
-    if ((err = gpu_scalar_from_device(ctx, &read_res_6380, mem_6194.mem, (int64_t) 0 * sizeof(int32_t), sizeof(int32_t))) != 0)
-        goto cleanup;
-    if (ctx->failure_is_an_option && futhark_context_sync(ctx) != 0) {
-        err = 1;
-        goto cleanup;
-    }
-    
-    int32_t defunc_0_f_res_6171 = read_res_6380;
-    
-    if (memblock_unref_device(ctx, &mem_6194, "mem_6194") != 0)
-        return 1;
-    prim_out_6200 = defunc_0_f_res_6171;
-    *out_prim_out_6379 = prim_out_6200;
-    
-  cleanup:
-    {
-        if (memblock_unref_device(ctx, &segred_tmp_mem_6239, "segred_tmp_mem_6239") != 0)
-            return 1;
-        if (memblock_unref_device(ctx, &segred_tmp_mem_6237, "segred_tmp_mem_6237") != 0)
-            return 1;
-        if (memblock_unref_device(ctx, &segred_tmp_mem_6235, "segred_tmp_mem_6235") != 0)
-            return 1;
-        if (memblock_unref_device(ctx, &segred_tmp_mem_6233, "segred_tmp_mem_6233") != 0)
-            return 1;
-        if (memblock_unref_device(ctx, &segred_tmp_mem_6231, "segred_tmp_mem_6231") != 0)
-            return 1;
-        if (memblock_unref_device(ctx, &segred_tmp_mem_6229, "segred_tmp_mem_6229") != 0)
-            return 1;
-        if (memblock_unref_device(ctx, &mem_6199, "mem_6199") != 0)
-            return 1;
-        if (memblock_unref_device(ctx, &mem_6198, "mem_6198") != 0)
-            return 1;
-        if (memblock_unref_device(ctx, &mem_6197, "mem_6197") != 0)
-            return 1;
-        if (memblock_unref_device(ctx, &mem_6196, "mem_6196") != 0)
-            return 1;
-        if (memblock_unref_device(ctx, &mem_6195, "mem_6195") != 0)
-            return 1;
-        if (memblock_unref_device(ctx, &mem_6194, "mem_6194") != 0)
-            return 1;
-    }
-    return err;
-}
 
-int futhark_entry_main(struct futhark_context *ctx, int32_t *out0, const struct futhark_i32_1d *in0)
-{
-    int64_t dz2080U_5846 = (int64_t) 0;
-    int32_t prim_out_6200 = 0;
-    int ret = 0;
-    
-    lock_lock(&ctx->lock);
-    CUDA_SUCCEED_FATAL(cuCtxPushCurrent(ctx->cu_ctx));
-    
-    struct memblock_device xs_mem_6192;
-    
-    xs_mem_6192.references = NULL;
-    xs_mem_6192 = in0->mem;
-    dz2080U_5846 = in0->shape[0];
-    if (!(dz2080U_5846 == in0->shape[0])) {
-        ret = 1;
-        set_error(ctx, msgprintf("Error: entry point arguments have invalid sizes.\n"));
-    }
-    if (ret == 0) {
-        ret = futrts_entry_main(ctx, &prim_out_6200, xs_mem_6192, dz2080U_5846);
-        if (ret == 0) {
-            struct memblock_device counters_mem_6207 = ctx->constants->counters_mem_6207;
-            
-            *out0 = prim_out_6200;
-        }
-    }
-    CUDA_SUCCEED_FATAL(cuCtxPopCurrent(&ctx->cu_ctx));
-    lock_unlock(&ctx->lock);
-    return ret;
-}
+
+
   

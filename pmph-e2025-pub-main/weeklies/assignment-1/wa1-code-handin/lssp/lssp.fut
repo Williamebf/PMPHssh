@@ -28,27 +28,30 @@ let lss_redOp (pred2: i32 -> i32 -> bool)
   -- Weekly 1, task 2 -- LSSP
   -- TODO: fill in the 5 missing values (indicated by `???`).
   -- Connecting = check if sublist 1 connects to sublist 2 or not, zero same or sorted
-  let segments_connect = pred2 x_last y_first
+  let segments_connect = 
+    if (x_len == 0|| y_len == 0)
+    then true
+    else pred2 x_last y_first
   --let leftside = max y_lss (x_lcs + y_lis)
   -- lss = largest total segment
   let new_lss = 
     if segments_connect
     then max x_lss (max y_lss (x_lcs + y_lis))
-                 
     else max x_lss y_lss
   -- lis = largest initial segment
   let new_lis = 
-    if segments_connect 
-    then if x_lis == x_len && y_lis == y_len 
-      then x_len + y_len
-      else max x_lis (y_lis + y_len)
+    if segments_connect && x_lis == x_len
+    --then if x_lis == x_len && y_lis == y_len  
+      --then x_len + y_len
+    then (x_len + y_lis)
+      
     else x_lis
   -- lcs largest concluding segment
   let new_lcs =
-    if segments_connect
-    then if  x_lcs == x_len && y_lcs == y_len
-      then x_len + y_len
-      else max y_lcs (x_lcs + y_len)
+    if segments_connect && y_lcs == y_len
+    --then if  x_lcs == x_len && y_lcs == y_len
+    --  then x_len + y_len
+    then (x_lcs + y_len)
     else y_lcs
   -- len is the if all elements
   let new_len = (x_len + y_len)
