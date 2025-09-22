@@ -185,8 +185,10 @@ scanIncWarp( volatile typename OP::RedElTp* ptr, const uint32_t idx ) {
     
     #pragma unroll
     for (int d=0; d < k; d++){
+        // 1 2 4 8 16
         const uint32_t h = 1<<d;
         if( lane >= h ){
+            //lane [0 ... 31] larger than 1, 2, 4, 8, 16
             ptr[idx] = OP::apply(ptr[idx-h], ptr[idx]);
         }
     }
@@ -216,8 +218,10 @@ scanIncWarp( volatile typename OP::RedElTp* ptr, const uint32_t idx ) {
 template<class OP>
 __device__ inline typename OP::RedElTp
 scanIncBlock(volatile typename OP::RedElTp* ptr, const uint32_t idx) {
+    //11111 = 31
+    //11111 & 11111 = 1111111 = 31
     const uint32_t lane   = idx & (WARP-1);
-    const uint32_t warpid = idx >> lgWARP;
+    const uint32_t warpid = idx >> lgWARP; // 1023 >> 5 = 31
 
     // 1. perform scan at warp level. `scanIncWarp` computes its result in-place
     //    and also returns the per-thread result.
@@ -228,9 +232,16 @@ scanIncBlock(volatile typename OP::RedElTp* ptr, const uint32_t idx) {
     //   the first warp. This works because
     //   warp size = 32, and
     //   max block size = 32^2 = 1024
-    // Bug here, as write from memory, and reading from ptr memory
-    //To do this you can reason with dependency matrix.
-    if (lane == (WARP-1)) { ptr[warpid] = OP::remVolatile(ptr[idx]); }
+    // Error here, read and write to same memory
+    typename OP::RedElTp temp = OP::identity();
+    if (lane == (WARP-1)) { 
+         typename OP::RedElTp temp = OP::remVolatile(ptr[idx]);
+    }
+    __syncthreads(); // Ensure all reads complete before any writes
+    
+    if (lane == (WARP-1)) { 
+        ptr[warpid] = temp; 
+    }
     __syncthreads();
 
     // 3. scan again the first warp.
@@ -745,6 +756,13 @@ sgmScanIncWarp(volatile typename OP::RedElTp* ptr, volatile F* flg, const uint32
     typedef ValFlg<typename OP::RedElTp> FVTup;
     const uint32_t lane = idx & (WARP-1);
 
+    /* if(lane==0) {
+        #pragma unroll
+        for(int i=1; i<WARP; i++) {
+            ptr[idx+i] = OP::apply(ptr[idx+i-1], ptr[idx+i]);
+        }
+    }
+    return OP::remVolatile(ptr[idx]); */
     // no synchronization needed inside a WARP, i.e., SIMD execution
     #pragma unroll
     for(uint32_t i=0; i<lgWARP; i++) {

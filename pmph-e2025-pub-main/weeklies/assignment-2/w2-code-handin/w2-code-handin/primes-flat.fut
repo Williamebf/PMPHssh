@@ -47,36 +47,29 @@ let primesFlat (n: i64) = --: []i64 =
       -- map prime 8/prime-1 = [8/2-1 = 3, 8/3-1 = 1, 8/5-1 = 0, 8/7 -1= 0]
       let mult_lens = map (\p -> (len / p) - 1) sq_primes
       -- Sum 3+1 = 4
-      let flat_size = reduce (+) 0 mult_lens
-
-      --let flen = (if flat_size < flen2 then length mult_lens else flat_size )
+      --let flat_size = reduce (+) 0 mult_lens
       -- mn = multlen
       -- p = sqrt_primes
       -- Scan inclusive
       -- [3, 4, 4, 4]
       -- create flag
       -- scan inclusive
-      let shp_sc = scan (+) 0 mult_lens
+      --let shp_sc = scan (+) 0 mult_lens
       -- shape is flat_size
       -- scan exclusive
-      let shape_exclusive = map (\i-> if i == 0 then 0 else shp_sc[i-1]) (iota flat_size)
-      let falsearray = replicate flat_size false
-      --let truearray = replicate flen true
-
-      let truearray = map (\_ -> true) mult_lens
-      let flag = scatter falsearray shape_exclusive (truearray :> [flat_size]bool)
+      --let shape_exclusive = map (\i-> if i == 0 then 0 else shp_sc[i-1]) (iota flat_size)
+      --let falsearray = replicate n false
+      --let truearray = replicate flat_size true
+      --let flag = scatter falsearray shape_exclusive truearray
       --let tmp = replicate n 1i64
       --let tmp_int = map (\b -> if b then 1i64 else 0i64) tmp
       --let iot = sgmScan (+) 0 flag tmp
       
-
-      let flagtemp = mkFlagArray mult_lens 0 mult_lens --
+      let flagtemp = mkFlagArray mult_lens 0 mult_lens
       let flen = length flagtemp
-      let flagtemp = flagtemp
       let flagtemp = flagtemp :> [flen]i64
-      --let vals = map (\f -> if f!= 0 then 0 else 1) flagtemp
       let vals = map (\f -> if f!= 0 then 0 else 1) flagtemp
-      let iotsp1 = sgmScan (+) 0 (map bool.i64 flagtemp) vals
+      let iotsp1 = sgmScan (+) 0 (map(\f -> if f == 1 then true else false) flagtemp) vals
       let iots = map(\x -> x-1) iotsp1
       --let truearraytwo = replicate flat_size true
       --let flagtwom = scatter falsearray shape_exclusive truearray
