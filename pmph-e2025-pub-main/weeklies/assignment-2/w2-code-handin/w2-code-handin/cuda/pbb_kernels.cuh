@@ -181,14 +181,12 @@ __device__ inline typename OP::RedElTp
 scanIncWarp( volatile typename OP::RedElTp* ptr, const uint32_t idx ) {
     const uint32_t lane = idx & (WARP-1);
     const uint32_t k = lgWARP;
-    //Thread number inside warp, this is 31 threads doing nothing and first one doing something
     
     #pragma unroll
     for (int d=0; d < k; d++){
         // 1 2 4 8 16
         const uint32_t h = 1<<d;
         if( lane >= h ){
-            //lane [0 ... 31] larger than 1, 2, 4, 8, 16
             ptr[idx] = OP::apply(ptr[idx-h], ptr[idx]);
         }
     }
