@@ -44,89 +44,25 @@ let primesFlat (n: i64) = --: []i64 =
       -- if n/len < len then n = 8, else 64
       
       let len = if n / len < len then n else len*len
+      
       -- map prime 8/prime-1 = [8/2-1 = 3, 8/3-1 = 1, 8/5-1 = 0, 8/7 -1= 0]
       let mult_lens = map (\p -> (len / p) - 1) sq_primes
+      let flen = reduce (+) 0 mult_lens
       -- Sum 3+1 = 4
-      let flat_size = reduce (+) 0 mult_lens
-
-      --let flen = (if flat_size < flen2 then length mult_lens else flat_size )
       -- mn = multlen
       -- p = sqrt_primes
       -- Scan inclusive
       -- [3, 4, 4, 4]
       -- create flag
-      -- scan inclusive
-      let shp_sc = scan (+) 0 mult_lens
-      -- shape is flat_size
-      -- scan exclusive
-      let shape_exclusive = map (\i-> if i == 0 then 0 else shp_sc[i-1]) (iota flat_size)
-      let falsearray = replicate flat_size false
-      --let truearray = replicate flen true
+      let flagtemp = mkFlagArray mult_lens 0 mult_lens 
 
-      let truearray = map (\_ -> true) mult_lens
-      let flag = scatter falsearray shape_exclusive (truearray :> [flat_size]bool)
-      --let tmp = replicate n 1i64
-      --let tmp_int = map (\b -> if b then 1i64 else 0i64) tmp
-      --let iot = sgmScan (+) 0 flag tmp
-      
-
-      let flagtemp = mkFlagArray mult_lens 0 mult_lens --
-      let flen = length flagtemp
-      let flagtemp = flagtemp
       let flagtemp = flagtemp :> [flen]i64
-      --let vals = map (\f -> if f!= 0 then 0 else 1) flagtemp
       let vals = map (\f -> if f!= 0 then 0 else 1) flagtemp
       let iotsp1 = sgmScan (+) 0 (map bool.i64 flagtemp) vals
-      let iots = map(\x -> x-1) iotsp1
-      --let truearraytwo = replicate flat_size true
-      --let flagtwom = scatter falsearray shape_exclusive truearray
-      --let tmp = replicate flat_size true
-      --let iot = sgmScan (+) 2 flag tmp
-      let twom = map (+2) iots
-      -- ns =  sq_primes, inds = inds
-      --let shp_sctwo = scan (+) 0 mult_lens
-      --let falsearraytwo = replicate n false
-      --let truearraytwo = replicate flat_size true
-      --let inds = map (\i-> if i == 0 then 0 else shp_sctwo[i-1]) (iota flat_size)
-      --let size = last inds + flat_size
-      --let flag2 = scatter (replicate size false) inds mult_lens
-      --let vals = scatter (replicate size 0i64) inds sq_primes
-      --let rp = sgmScan (+) 0 flag2 vals 
+      let twom = map (+2) iotsp1
       let (flag_n, flag_v) = zip mult_lens sq_primes |> mkFlagArray mult_lens (0,0) |> unzip 
-      let rp = sgmScan (+) 0 (map(\f -> if f == 1 then true else false)  flag_n) flag_v
+      let rp = sgmScan (+) 0 (map bool.i64 flag_n) flag_v
       let not_primes = map2(\j p -> j*p) twom (rp :> [flen]i64)
-      
-      --let (flagn, flagv) = 
-      --  unzip <| mkFlagArray mult_lens (0,0) <| zip mult_lens sq_primes in sgmScan (+) 0 flagn flagv
-      --let endfmap = map (\(f1, f2) -> f1*f2) (zip twom rp)
-      
-      
-
-      --let norm = map(\i let ip1 = i+1 in
-      --let iot = (iota i) in)
-      -- Scan exclusive
-      --indexes
-      -- [0,3,4,4]
-      
-      --let shapeflag = scatter (replicate flat_size 0) shape_exclusive sq_primes
-      --true array
-      --let tmp = replicate flat_size 1 
-      --let sgmscanexclusive = sgmScan (+) 0 shapeflag tmp
-      
-      --let composite = map(\x -> x +2) shape_exclusive
-      --let rp = replicate (flat_size sq_primes)
-      --let nprime = (\(j,p) -> j*p) (zip composite rp) 
-      --arr = sq_primes
-      -- idx = shape exclusive
-      --let all_even = all (\m -> m % 2 == 0) multiples
-      
-
-      --let twom= map (+2) mult_lens -- F rule 2
-      --let rp = replicate mm1 p in-- F rule 3
-      --map (\(j,p) -> j*p) (zip twom rp) -- F rule 2
-      --) sq_primes
-      --let composite = map (\p -> let mm1 = (flat_size / p) - 1
-      --  in map (\j -> j * p) (map (+2) (iota mm1))) sq_primes
       --------------------------------------------------------------
       -- The current iteration knows the primes <= 'len', 
       --  based on which it will compute the primes <= 'len*len'
@@ -162,7 +98,6 @@ let primesFlat (n: i64) = --: []i64 =
        -- unsafe flag disables bounds checking for prime flag array.
        -- Rungs over primeflags, puts i into index, if prime flag != 0
        let sq_primes   = filter (\i -> #[unsafe] prime_flags[i] != 0) (iota (len + 1))
-       --in (mult_lens, len)
        in (sq_primes, len)
   in sq_primes
 

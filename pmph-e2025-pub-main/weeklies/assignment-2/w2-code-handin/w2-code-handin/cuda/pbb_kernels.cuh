@@ -235,7 +235,7 @@ scanIncBlock(volatile typename OP::RedElTp* ptr, const uint32_t idx) {
     // Error here, read and write to same memory
     typename OP::RedElTp temp = OP::identity();
     if (lane == (WARP-1)) { 
-         typename OP::RedElTp temp = OP::remVolatile(ptr[idx]);
+        temp = OP::remVolatile(ptr[idx]);
     }
     __syncthreads(); // Ensure all reads complete before any writes
     
